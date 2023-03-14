@@ -1,9 +1,9 @@
 const definition = {
 	openapi: "3.0.0",
 	info: {
-		title: "API - Consignação",
+		title: "API - ERP - Setes",
 		version: "1.0.0",
-		description: "API para sistema de Consignação",
+		description: "API para sistema de ERP da Setes",
         contact: {
             email: 'valdo@setes.com.br'
         }		

@@ -48,7 +48,7 @@ const server = {
         });
 
         app.get("/", (req, res) => {
-            res.json({ message: "Bem vindo a API do Sistema de Consignação." });
+            res.json({ message: "Bem vindo a API do Sistema de ERP - Setes." });
         });
               
         app.use( routes);
