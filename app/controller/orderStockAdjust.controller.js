@@ -40,11 +40,10 @@ class OrderStockAdjustController extends Base {
         id: body.Order.id,
         tb_institution_id: body.Order.tb_institution_id,
         terminal: 0,
-        number: body.Order.number,
+        number: body.Order.number,        
         tb_entity_id: body.Order.tb_entity_id,
-        direction: body.Order.direction
+        direction: body.Order.direction,
       }
-
       Tb.create(dataOrder)
         .then(() => {
           resolve(body);
@@ -119,15 +118,15 @@ class OrderStockAdjustController extends Base {
         '  ord.id, ' +
         '  ord.tb_institution_id, ' +
         '  ord.tb_user_id, ' +
-        '  ora.tb_entity_id,' +
-        '  etd.name_company name_entity,' +
-        '  ord.dt_record, ' +
-        '  ora.number, ' +
+        '  ora.tb_entity_id, ' +
+        '  etd.name_company name_entity, ' +
+        '  ord.dt_record,  ' +
+        '  ora.number,  ' +
         '  ord.status, ' +
         ' CAST(ord.note AS CHAR(1000) CHARACTER SET utf8) note ' +
-        'from tb_order ord  ' +
+        'from tb_order ord ' +
         '   inner join tb_order_stock_adjust ora ' +
-        '   on (ora.id = ord.id)  ' +
+        '   on (ora.id = ord.id) ' +
         '     and (ora.tb_institution_id = ord.tb_institution_id) ' +
         '     and (ora.terminal = ord.terminal) ' +
         '   inner join tb_entity etd ' +
@@ -137,8 +136,12 @@ class OrderStockAdjustController extends Base {
           replacements: [tb_institution_id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
-          resolve(data);
-
+          var dataReturn = {};
+          var arrayReturn = [];
+          for (var item of data) {
+            arrayReturn.push(item);
+          }
+          resolve(arrayReturn);
         })
         .catch(err => {
           reject("orderstockadjust.getlist: " + err);
@@ -177,23 +180,22 @@ class OrderStockAdjustController extends Base {
     return promise;
   }
 
-  static getOrder(tb_institution_id, id) {
+  static async getOrder(tb_institution_id, id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         '  select ' +
         '  ord.id, ' +
         '  ord.tb_institution_id, ' +
         '  ord.tb_user_id, ' +
-        '  ora.tb_entity_id,' +
-        '  etd.name_company name_entity,' +
-        '  ord.dt_record, ' +
-        '  ora.direction,' +
-        '  ora.number, ' +
+        '  ora.tb_entity_id, ' +
+        '  etd.name_company name_entity, ' +
+        '  ord.dt_record,  ' +
+        '  ora.number,  ' +
         '  ord.status, ' +
         ' CAST(ord.note AS CHAR(1000) CHARACTER SET utf8) note ' +
-        'from tb_order ord  ' +
+        'from tb_order ord ' +
         '   inner join tb_order_stock_adjust ora ' +
-        '   on (ora.id = ord.id)  ' +
+        '   on (ora.id = ord.id) ' +
         '     and (ora.tb_institution_id = ord.tb_institution_id) ' +
         '     and (ora.terminal = ord.terminal) ' +
         '   inner join tb_entity etd ' +
@@ -207,34 +209,7 @@ class OrderStockAdjustController extends Base {
           resolve(data[0]);
         })
         .catch(err => {
-          reject('orderstockadjust.get: ' + err);
-        });
-    });
-    return promise;
-  }
-
-  static async getStatus(tb_institution_id, id) {
-    const promise = new Promise((resolve, reject) => {
-      Tb.sequelize.query(
-        '  select ' +
-        '  ord.status ' +
-        'from tb_order ord  ' +
-        '   inner join tb_order_stock_adjust ora ' +
-        '   on (ora.id = ord.id)  ' +
-        '     and (ora.tb_institution_id = ord.tb_institution_id) ' +
-        '     and (ora.terminal = ord.terminal) ' +
-        '   inner join tb_entity etd ' +
-        '   on (etd.id = ora.tb_entity_id)  ' +
-        'where (ord.tb_institution_id =? ) ' +
-        ' and (ord.id =? )',
-        {
-          replacements: [tb_institution_id, id],
-          type: Tb.sequelize.QueryTypes.SELECT
-        }).then(data => {
-          resolve(data[0].status);
-        })
-        .catch(err => {
-          reject('orderstockadjust.getStatus: ' + err);
+          reject('orderstockadjust.getOrder: ' + err);
         });
     });
     return promise;
@@ -248,11 +223,13 @@ class OrderStockAdjustController extends Base {
         result.Order = dataOrder;
         const dataItems = await orderItem.getList(tb_institution_id, id);
         result.Items = dataItems;
+        result.Order.tb_stock_list_id = dataItems[0].tb_stock_list_id;
+        result.Order.name_stock_list =  dataItems[0].name_stock_list;
 
         resolve(result);
       }
       catch (err) {
-        reject('collaborator.get: ' + err);
+        reject('orderstockadjust.get: ' + err);
       }
     });
     return promise;
@@ -274,10 +251,9 @@ class OrderStockAdjustController extends Base {
           tb_institution_id: dataOrderStockAdjust.tb_institution_id,
           terminal: dataOrderStockAdjust.terminal
         }
-
       })
-        .then(() => {
-          resolve(dataOrderStockAdjust);
+        .then((data) => {
+          resolve(data);
         })
         .catch(err => {
           reject("orderStockAdjust.updateOrder:" + err);
@@ -289,6 +265,7 @@ class OrderStockAdjustController extends Base {
   static async updateOrderItem(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
+
         var dataItem = {};
         for (var item of body.Items) {
           dataItem = {
@@ -296,12 +273,12 @@ class OrderStockAdjustController extends Base {
             tb_institution_id: body.Order.tb_institution_id,
             tb_order_id: body.Order.id,
             terminal: 0,
-            tb_stock_list_id: item.tb_stock_list_id,
+            tb_stock_list_id: body.Order.tb_stock_list_id,
             tb_product_id: item.tb_product_id,
             quantity: item.quantity,
-            unit_value: item.unit_value
+            kind : "StockAdjustment",
           };
-          //Quanto o insert é mais complexo como getNext precisa do await no loop          
+          //Quanto o insert é mais complexo como getNext precisa do await no loop 
           switch (item.update_status) {
             case "I":
               await orderItem.insert(dataItem)
@@ -373,12 +350,14 @@ class OrderStockAdjustController extends Base {
     return promise;
   }
 
+
   static async closure(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        var status = await this.getStatus(body.tb_institution_id, body.id);
-        if (status == 'A') {
+        var dataOrder = await this.getOrder(body.tb_institution_id, body.id);
+        if (dataOrder.status == 'A') {
           var items = await orderItem.getList(body.tb_institution_id, body.id);
+
           var dataItem = {};
           for (var item of items) {
             dataItem = {
@@ -387,16 +366,22 @@ class OrderStockAdjustController extends Base {
               tb_order_id: body.id,
               terminal: 0,
               tb_order_item_id: item.id,
-              tb_stock_list_id: item.tb_stock_list_id,
+              tb_stock_list_id: 0,
               local: "web",
               kind: "Fechamento",
               dt_record: body.dt_record,
-              direction: body.direction,
+              direction: "S",
               tb_merchandise_id: item.tb_product_id,
               quantity: item.quantity,
-              operation: "Ajuste"
+              operation: "StockAdjustment"
             };
-            //Quanto o insert é mais complexo como create precisa do await no loop          
+            //Origen
+            dataItem['tb_stock_list_id'] = dataOrder.tb_stock_list_id_ori;
+            dataItem['direction'] = 'S';
+            await stockStatement.insert(dataItem);
+            //Destiny
+            dataItem['tb_stock_list_id'] = dataOrder.tb_stock_list_id_des;
+            dataItem['direction'] = 'E';
             await stockStatement.insert(dataItem);
           };
           await order.updateStatus(body.tb_institution_id, body.id, 'F');
@@ -414,16 +399,9 @@ class OrderStockAdjustController extends Base {
   static async reopen(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        var status = await this.getStatus(body.tb_institution_id, body.id);
-        if (status == 'F') {
+        var dataOrder = await this.getOrder(body.tb_institution_id, body.id);
+        if (dataOrder.status == 'F') {
           var items = await orderItem.getList(body.tb_institution_id, body.id);
-          var direction = 'S';
-          if (body.direction == 'S') {
-            direction = 'E'
-          }
-          else {
-            direction = 'S'
-          };
           var dataItem = {};
           for (var item of items) {
             dataItem = {
@@ -432,16 +410,22 @@ class OrderStockAdjustController extends Base {
               tb_order_id: body.id,
               terminal: 0,
               tb_order_item_id: item.id,
-              tb_stock_list_id: item.tb_stock_list_id,
+              tb_stock_list_id: 0,
               local: "web",
-              kind: "Reabertura",
+              kind: "Fechamento",
               dt_record: body.dt_record,
-              direction: direction,
+              direction: "S",
               tb_merchandise_id: item.tb_product_id,
               quantity: item.quantity,
-              operation: "Ajuste"
+              operation: "StockAdjustment"
             };
-            //Quanto o insert é mais complexo como create precisa do await no loop          
+            //Origen - Inverte direção ao reabrir
+            dataItem['tb_stock_list_id'] = dataOrder.tb_stock_list_id_ori;
+            dataItem['direction'] = 'E';
+            await stockStatement.insert(dataItem);
+            //Destiny - Inverte direção ao reabrir
+            dataItem['tb_stock_list_id'] = dataOrder.tb_stock_list_id_des;
+            dataItem['direction'] = 'S';
             await stockStatement.insert(dataItem);
           };
           await order.updateStatus(body.tb_institution_id, body.id, 'A');
@@ -449,146 +433,12 @@ class OrderStockAdjustController extends Base {
         } else {
           resolve("201");
         }
-
-      } catch (err) {
-        reject(err);
-      }
-
-    });
-    return promise;
-  }
-
-  static async saveByCard(body) {
-    const promise = new Promise(async (resolve, reject) => {
-      try {
-        var qtde = 0;
-        for (var item of body.Items) {
-          qtde += item.adjust;
-        }
-        /*
-          Aqui muito cuidado por que o estoque é invertido mesmo...
-          O ajuste é uma devolução do vendedor que deve sair do Estoque do vendedor
-          Mas como temos outra operação de transferencia onde o esoque fabrica é a origem e o vendedor é o destino.
-          Precisamos aqui informar que o estoque vendedor é a origem para que o produto seja retirado do estoque dele.
-        */
-        if (qtde > 0) {
-          var _order = {
-            id: body.Order.id,
-            tb_institution_id: body.Order.tb_institution_id,
-            terminal: 0,
-            number: 0,
-            tb_entity_id: body.Order.tb_entity_id,
-            dt_record: body.Order.dt_record,
-            tb_stock_list_id_ori: body.StockDestiny.tb_stock_list_id,
-            tb_stock_list_id_des: body.StockOrigen.tb_stock_list_id,
-            direction: body.Order.direction,
-          }
-
-          body.Order['tb_stock_list_id_ori'] = body.StockDestiny.tb_stock_list_id;
-          body.Order['tb_stock_list_id_des'] = body.StockOrigen.tb_stock_list_id;
-          var _body = {};
-          _body["Order"] = _order;
-          await this.insertOrder(_body);
-          await this.insertOrderItemByCard(body, "StockAdjustment");
-
-          await this.closurebyCard(body, "StockAdjustment");
-        }
-        resolve(body);
-      } catch (err) {
-        reject(err);
-      }
-
-
-    });
-    return promise;
-  }
-
-  static async insertOrderItemByCard(body, kind) {
-    const promise = new Promise(async (resolve, reject) => {
-      try {
-
-        var dataItem = {};
-        var quantity = 0;
-        for (var item of body.Items) {
-          quantity = 0;
-          if (item.adjust > 0) {
-            quantity = item.adjust
-
-            if (quantity > 0) {
-              dataItem = {
-                id: 0,
-                tb_institution_id: body.Order.tb_institution_id,
-                tb_order_id: body.Order.id,
-                terminal: 0,
-                tb_stock_list_id: body.Order.tb_stock_list_id_des,
-                tb_product_id: item.tb_product_id,
-                quantity: item.adjust,
-                unit_value: 0,
-                kind: kind,
-              };
-              //Quanto o insert é mais complexo como getNext precisa do await no loop          
-              await orderItem.insert(dataItem);
-            };
-          }
-        };
-        resolve("Items Adicionados");
-      } catch (err) {
-        reject("orderStockAdjust.insertOrderItemByCard:" + err);
-      }
-
-    });
-    return promise;
-  }
-
-  static async closurebyCard(body, operation) {
-    const promise = new Promise(async (resolve, reject) => {
-      try {
-        var items = await this.getItemList(body.Order.tb_institution_id, body.Order.id, operation);
-        var dataItem = {};
-        for (var item of items) {
-          dataItem = {
-            id: 0,
-            tb_institution_id: item.tb_institution_id,
-            tb_order_id: item.tb_order_id,
-            terminal: 0,
-            tb_order_item_id: item.id,
-            tb_stock_list_id: item.tb_stock_list_id,
-            local: "web",
-            kind: "Fechamento",
-            dt_record: body.Order.dt_record,
-            direction: "S",
-            tb_merchandise_id: item.tb_product_id,
-            quantity: item.quantity,
-            operation: operation,
-          };
-          //Sempre sai da Origem 
-          dataItem['tb_stock_list_id'] = body.Order.tb_stock_list_id_ori;
-          dataItem['direction'] = 'S';
-          await stockStatement.insert(dataItem);
-        };
-        resolve("200");
       } catch (err) {
         reject(err);
       }
     });
     return promise;
   }
-
-  static async cleanUp(tb_institution_id, id) {
-    const promise = new Promise(async (resolve, reject) => {
-      try {
-        const order = {
-          tb_institution_id: tb_institution_id,
-          id: id,
-          terminal: 0,
-        }
-        await this.delete(order);
-        resolve("clenUp executado com sucesso!");
-      } catch (error) {
-        reject('orderStockadjust.cleanUp ' + error);
-      }
-    });
-    return promise;
-  }
+  
 }
 module.exports = OrderStockAdjustController;

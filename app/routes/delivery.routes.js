@@ -12,6 +12,6 @@ router.post("/save", delivery.save);
 // Retrieve a single  with id
 router.get("/:orderID/:institutionID", delivery.findOne);
 
-router.get("/syncronize/:institutionID/:updatedAT", delivery.syncronize);
+router.get("/syncronize/:institutionID/:"updated_at"", delivery.syncronize);
 module.exports = router;  
 

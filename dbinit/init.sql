@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS tb_entity (
   nick_trade varchar(100) DEFAULT '',
   aniversary date DEFAULT NULL,
   createdAt datetime NOT NULL,
-  updatedAt datetime NOT NULL,
+  "updated_at" datetime NOT NULL,
   tb_linebusiness_id int(11) DEFAULT NULL,
   note blob,
   PRIMARY KEY (id)
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS tb_mailing (
   id int(11) NOT NULL,
   email varchar(100) NOT NULL,
   createdAt datetime NOT NULL,
-  updatedAt datetime NOT NULL,
+  "updated_at" datetime NOT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY email (email)
 );
@@ -32,7 +32,7 @@ CREATE TABLE tb_user (
   active char(1) NOT NULL DEFAULT 'S',
   activation_key varchar(255) DEFAULT NULL,
   createdAt datetime DEFAULT NULL,
-  updatedAt datetime DEFAULT NULL,
+  "updated_at" datetime DEFAULT NULL,
   PRIMARY KEY (id,kind)
 );
 
@@ -40,7 +40,7 @@ CREATE TABLE tb_institution (
   id int(11) NOT NULL,
   active char(1) DEFAULT NULL,
   createdAt datetime DEFAULT NULL,
-  updatedAt datetime DEFAULT NULL,
+  "updated_at" datetime DEFAULT NULL,
   PRIMARY KEY (id)
 ) ;
 
@@ -50,10 +50,10 @@ CREATE TABLE tb_institution_has_user (
   kind varchar(20) DEFAULT NULL,
   active char(1) DEFAULT NULL,
   createdAt datetime DEFAULT NULL,
-  updatedAt datetime DEFAULT NULL,
+  "updated_at" datetime DEFAULT NULL,
   PRIMARY KEY (tb_user_id,tb_institution_id),
   KEY tb_institution_id (tb_institution_id),
-  KEY updatedAt (updatedAt),
+  KEY "updated_at" ("updated_at"),
   CONSTRAINT tb_institution_has_user_ibfk_1 FOREIGN KEY (tb_user_id) REFERENCES tb_user (id),
   CONSTRAINT tb_institution_has_user_ibfk_2 FOREIGN KEY (tb_institution_id) REFERENCES tb_institution (id)
 );
@@ -74,7 +74,7 @@ CREATE TABLE tb_company (
   iss_process_number varchar(50) DEFAULT NULL,
   send_xml_nfe_only char(1) DEFAULT NULL,
   createdAt datetime NOT NULL,
-  updatedAt datetime NOT NULL  
+  "updated_at" datetime NOT NULL  
 ) ;
 
 CREATE TABLE tb_person (
@@ -87,7 +87,7 @@ CREATE TABLE tb_person (
   birthday date DEFAULT NULL,
   tb_profession_id int(11) DEFAULT NULL,
   createdAt datetime DEFAULT NULL,
-  updatedAt datetime DEFAULT NULL
+  "updated_at" datetime DEFAULT NULL
 ) ;
 
 CREATE TABLE tb_person (
@@ -100,14 +100,14 @@ CREATE TABLE tb_person (
   birthday date DEFAULT NULL,
   tb_profession_id int(11) DEFAULT NULL,
   createdAt datetime DEFAULT NULL,
-  updatedAt datetime DEFAULT NULL
+  "updated_at" datetime DEFAULT NULL
 );
 
 CREATE TABLE tb_country (
   id int(11) NOT NULL,
   name varchar(100) DEFAULT NULL,
   createdAt datetime DEFAULT NULL,
-  updatedAt datetime DEFAULT NULL
+  "updated_at" datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 ALTER TABLE tb_country   ADD PRIMARY KEY (id);
@@ -119,7 +119,7 @@ CREATE TABLE tb_state (
   abbreviation varchar(2) DEFAULT NULL,
   name varchar(100) DEFAULT NULL,
   createdAt datetime DEFAULT NULL,
-  updatedAt datetime DEFAULT NULL
+  "updated_at" datetime DEFAULT NULL
 );
 
 ALTER TABLE tb_state
@@ -140,7 +140,7 @@ CREATE TABLE tb_city (
   density decimal(10,2) DEFAULT '0.00',
   area decimal(10,2) DEFAULT '0.00',
   createdAt datetime DEFAULT NULL,
-  updatedAt datetime DEFAULT NULL
+  "updated_at" datetime DEFAULT NULL
 );
 
 ALTER TABLE tb_city
@@ -167,7 +167,7 @@ CREATE TABLE tb_address (
   longitude varchar(20) DEFAULT NULL,
   latitude varchar(20) DEFAULT NULL,
   createdAt datetime NOT NULL,
-  updatedAt datetime NOT NULL
+  "updated_at" datetime NOT NULL
 );
 ALTER TABLE tb_address
   ADD PRIMARY KEY (id,kind),
@@ -184,7 +184,7 @@ CREATE TABLE tb_institution (
   id int(11) NOT NULL,
   active char(1) DEFAULT NULL,
   createdAt datetime DEFAULT NULL,
-  updatedAt datetime DEFAULT NULL
+  "updated_at" datetime DEFAULT NULL
 );
 ALTER TABLE tb_institution
   ADD PRIMARY KEY (id);
@@ -196,7 +196,7 @@ CREATE TABLE tb_phone (
   number varchar(20) DEFAULT NULL,
   address_kind varchar(100) DEFAULT '',
   createdAt datetime DEFAULT NULL,
-  updatedAt datetime DEFAULT NULL
+  "updated_at" datetime DEFAULT NULL
 ) ;
 ALTER TABLE tb_phone
   ADD PRIMARY KEY (id,kind),
@@ -206,7 +206,7 @@ CREATE TABLE tb_mailing_group (
   id int(11) NOT NULL,
   description varchar(100) DEFAULT NULL,
   createdAt datetime NOT NULL,
-  updatedAt datetime NOT NULL,
+  "updated_at" datetime NOT NULL,
   PRIMARY KEY (id)
 );
 create TABLE tb_entity_has_mailing (
@@ -214,7 +214,7 @@ create TABLE tb_entity_has_mailing (
   tb_mailing_id int(11) NOT NULL,
   tb_mailing_group_id int(11) NOT NULL,
   createdAt datetime NOT NULL,
-  updatedAt datetime NOT NULL,
+  "updated_at" datetime NOT NULL,
   PRIMARY KEY (tb_entity_id,tb_mailing_id,tb_mailing_group_id),
   KEY tb_mailing_id (tb_mailing_id),
   KEY tb_mailing_group_id (tb_mailing_group_id)
@@ -226,6 +226,6 @@ CREATE TABLE tb_stock_list (
   main char(1) DEFAULT 'N',
   active char(1) DEFAULT 'S',
   createdAt datetime DEFAULT NULL,
-  updatedAt datetime DEFAULT NULL,  
+  "updated_at" datetime DEFAULT NULL,  
   PRIMARY KEY (id,tb_institution_id)
 )

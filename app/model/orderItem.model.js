@@ -103,7 +103,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: null,
-      field: "discount_aliqu"
+      field: "discount_aliquot"
     },
     discount_value: {
       type: DataTypes.DECIMAL,
@@ -121,7 +121,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: null,
-      field: "createdAt"
+      field: "created_at"
     },
     updatedAt: {
       type: DataTypes.DATE,
@@ -130,7 +130,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: null,
-      field: "updatedAt"
+      field: "updated_at"
     }    
   };
   const options = {

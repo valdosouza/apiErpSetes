@@ -31,6 +31,7 @@ class OrderItemStockTransferController extends Base {
             'from tb_order_item ori '+
             '  inner join tb_product pdt '+
             '  on (pdt.id = ori.tb_product_id)'+
+            '  and (pdt.tb_institution_id = ori.tb_institution_id)'+
             'where (ori.tb_institution_id =? ) '+
             ' and (ori.tb_order_id =?) '+
             ' and (ori.kind =?)',                      

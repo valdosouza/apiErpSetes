@@ -66,10 +66,13 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
 
  /**
  * @swagger
- * /Entity:
+ * /entity/getlist/{tb_institution_id}:
  *   get:
  *     summary: Returns the list of all the Entities
  *     tags: [Entity]
+ *     parameters:
+ *      - in: path
+ *        name: tb_institution_id
  *     responses:
  *       200:
  *         description: The list of the entities
@@ -81,7 +84,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *                 $ref: '#/components/schemas/Entity'
  */
 
-router.get("/", entity.getList);
+router.get("/getlist/:tb_institution_id", entity.getList);
   
  /**
  * @swagger

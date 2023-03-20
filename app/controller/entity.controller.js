@@ -15,8 +15,8 @@ class EntityController extends Base {
         'e.tb_linebusiness_id,  '+
         'l.description name_linebusiness, '+
         'CAST(e.note AS CHAR(1000) CHARACTER SET utf8) note, '+
-        'e.createdAt,  '+
-        'e.updatedAt  '+
+        'e.created_at  '+
+        'e."updated_at"  '+
         'from tb_entity  e '+
         '   left outer join tb_linebusiness l '+
         '   on (l.id = e.tb_linebusiness_id) '+
@@ -70,14 +70,16 @@ class EntityController extends Base {
         return promise;        
     }    
 
-    static getList(body) {
+    static getList(tb_institution_id) {
         const promise = new Promise((resolve, reject) => {
           Tb.sequelize.query(
-            'select  * ' +
-            'from tb_entity '+
-            'where id is not null',
+            'select  e.* '+
+            'from tb_entity e '+
+            '   inner join tb_institution_has_entity ihe '+
+            '   on (ihe.tb_entity_id = e.id) '+
+            'where (ihe.tb_institution_id = ?) ',
             {
-              //replacements: [body.tb_institution_id ],
+              replacements: [tb_institution_id ],
               type: Tb.sequelize.QueryTypes.SELECT
             }).then(data => {
               resolve(data);

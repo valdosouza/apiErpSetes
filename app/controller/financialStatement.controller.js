@@ -299,7 +299,7 @@ class FinancialStatementController extends Base {
 
       var sqltxt =
       ' select ora.id tb_order_id, etd.id, etd.nick_trade  name_customer, CAST(ord.note AS CHAR(1000) CHARACTER SET utf8) note,'+  
-      ' SUBSTRING(time(ora.createdAt), 1, 5) time_attendace, coalesce(sum(fnl.tag_value),0) as  value_charged '+
+      ' SUBSTRING(time(ora.created_at), 1, 5) time_attendace, coalesce(sum(fnl.tag_value),0) as  value_charged '+
       ' from tb_order_attendance ora  '+
       '   inner join tb_order ord'+
       '   on (ord.id = ora.id)  '+
@@ -321,7 +321,7 @@ class FinancialStatementController extends Base {
       ' order by 5 ';
 
 
-      // 'select etd.id, etd.name_company  name_customer, SUBSTRING(time(ora.createdAt), 1, 5) time_attendace, sum(fnl.tag_value) value_charged  '+
+      // 'select etd.id, etd.name_company  name_customer, SUBSTRING(time(ora.created_at), 1, 5) time_attendace, sum(fnl.tag_value) value_charged  '+
       // 'from  tb_financial fnl '+
       // '   inner join tb_customer ct '+
       // '   on (ct.id = fnl.tb_entity_id) '+

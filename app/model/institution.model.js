@@ -29,7 +29,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: null,
-      field: "createdAt"
+      field: "created_at"
     },
     updatedAt: {
       type: DataTypes.DATE,
@@ -38,7 +38,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: null,
-      field: "updatedAt"
+      field: "updated_at"
     }
   };
   const options = {

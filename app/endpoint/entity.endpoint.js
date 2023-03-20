@@ -12,7 +12,8 @@ class EntityEndPoint {
 
   static getList(req, res) {
 
-    EntityController.getList(req.body).then(data => {
+    EntityController.getList(req.params.tb_institution_id)
+    .then(data => {
       res.send(data);
     })
   }

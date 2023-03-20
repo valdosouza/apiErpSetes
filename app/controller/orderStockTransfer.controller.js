@@ -295,7 +295,8 @@ class OrderStockTransferController extends Base {
             tb_stock_list_id: item.tb_stock_list_id,
             tb_product_id: item.tb_product_id,
             quantity: item.quantity,
-            unit_value: item.unit_value
+            unit_value: item.unit_value,
+            kind: 'StockTransfer',
           };
           //Quanto o insert é mais complexo como getNext precisa do await no loop 
           switch (item.update_status) {
