@@ -69,7 +69,7 @@ class ProdcutController extends Base {
         'from tb_product p ' +
         'where (p.tb_institution_id =? ) ' +
         'order by description ' +
-        'limit ' + (page * 20) + ',' + ((page * 20) + 19) + ' ',
+        'limit ' + (page * 20) + ',20 ',
         {
           replacements: [tb_institution_id],
           type: Tb.sequelize.QueryTypes.SELECT
