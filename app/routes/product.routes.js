@@ -106,13 +106,15 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
 
  /**
  * @swagger
- * /product/getlist/{tb_institution_id}:
+ * /product/getlist/{tb_institution_id}/{page}:
  *   get:
  *     summary: Returns the list of all the Products
  *     tags: [Product]
  *     parameters:
  *      - in: path
  *        name: tb_institution_id
+ *      - in: path
+ *        name: page
  *        schema:
  *          type: integer
  *        required: true
@@ -128,7 +130,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *                 $ref: '#/components/schemas/Product'
  */
 
-router.get("/getlist/:tb_institution_id", product.getList);
+router.get("/getlist/:tb_institution_id/:page/", product.getList);
   
 /**
  * @swagger
