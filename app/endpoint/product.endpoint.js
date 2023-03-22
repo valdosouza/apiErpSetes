@@ -12,7 +12,7 @@ class ProductEndPoint {
 
   static getList(req, res) {
     
-    ProdcutController.getList(req.params.tb_institution_id,req.params.page )
+    ProdcutController.getList(req.body )
       .then(data => {
         res.send(data);
       })

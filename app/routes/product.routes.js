@@ -71,6 +71,19 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *           type: array
  *           items: 
  *             $ref: '#/components/schemas/ProductPrice' 
+ * 
+ *     ProductParams:
+ *       type: object
+ *       properties:
+ *         page:
+ *           type: integer
+ *         tb_institution_id:
+ *           type: integer 
+ *         id:
+ *           type: integer
+ *         name_product:
+ *           type: string
+ *
  */
 
  /**
@@ -106,19 +119,15 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
 
  /**
  * @swagger
- * /product/getlist/{tb_institution_id}/{page}:
- *   get:
+ * /product/getlist/:
+ *   post:
  *     summary: Returns the list of all the Products
  *     tags: [Product]
- *     parameters:
- *      - in: path
- *        name: tb_institution_id
- *      - in: path
- *        name: page
- *        schema:
- *          type: integer
- *        required: true
- *        description: The product tb_institution_id
+ *     requestBody:
+  *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ProductParams'
  *     responses:
  *       200:
  *         description: The list of the payment types
@@ -130,7 +139,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *                 $ref: '#/components/schemas/Product'
  */
 
-router.get("/getlist/:tb_institution_id/:page/", product.getList);
+router.post("/getlist/", product.getList);
   
 /**
  * @swagger
