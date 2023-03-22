@@ -60,28 +60,30 @@ class ProdcutController extends Base {
 
   static getList(body) {
     const promise = new Promise((resolve, reject) => {
-      
+      var description = "";
       var sqltxt = 'select ' +
-      'p.id, ' +
-      'p.tb_institution_id, ' +
-      'p.description, ' +
-      'p.active ' +
-      'from tb_product p ' +
-      'where (p.tb_institution_id =? ) ' +
-      ' and (p.active = ?)';
-      if (body.name_product != ""){
+        'p.id, ' +
+        'p.tb_institution_id, ' +
+        'p.description, ' +
+        'p.active ' +
+        'from tb_product p ' +
+        'where (p.tb_institution_id =? ) ' +
+        ' and (p.active = ?)';
+      if (body.name_product != "") {
+        description = '%' + body.name_product + '%';
         sqltxt += ' and (p.description like ? ) ';
-      }else{
+      } else {
+        body.name_product = "";
         sqltxt += ' and (p.description <> ?) ';
       }
-      sqltxt += 
-      ' order by description ' +
-      ' limit ' + ((body.page-1) * 20) + ',20 ';
-      
+      sqltxt +=
+        ' order by description '+
+        ' limit ' + ((body.page - 1) * 20) + ',20 ';
+
       Tb.sequelize.query(
         sqltxt,
         {
-          replacements: [body.tb_institution_id,'S',('%'+body.name_productdescription+'%')],
+          replacements: [body.tb_institution_id, 'S', description],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           resolve(data);
