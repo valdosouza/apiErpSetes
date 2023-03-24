@@ -263,7 +263,7 @@ class OrderSaleController extends Base {
         resolve(result);
       }
       catch (err) {
-        reject('collaborator.get: ' + err);
+        reject('orderSaleController.get: ' + err);
       }
     });
     return promise;

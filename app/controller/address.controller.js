@@ -24,7 +24,7 @@ class AddressController extends Base {
           "a.main, " +
           "a.longitude, " +
           "a.latitude, " +
-          "a.created_at " +
+          "a.created_at, " +
           "a.updated_at " +
           "from tb_address a " +
           "    inner join tb_city ct   " +

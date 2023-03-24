@@ -4,6 +4,7 @@ const Tb = db.orderstocktransfer;
 const order = require('./order.controller.js');
 const orderItem = require('./orderItemStockTransfer.controller.js');
 const stockStatement = require('./stockStatement.controller.js');
+const entityHasStockList = require("../controller/entityHasStockList.controller.js");
 
 class OrderStockTransferController extends Base {
   static async getNextNumber(tb_institution_id) {
@@ -35,7 +36,11 @@ class OrderStockTransferController extends Base {
 
       if (body.Order.number == 0)
         body.Order.number = await this.getNextNumber(body.Order.tb_institution_id);
-
+      //Verifica se a Entidade e o Usuario são iguais para determinar Estoques automaticamente      
+      if ( body.Order.tb_entity_id == body.Order.tb_user_id ){
+        body.Order.tb_stock_list_id_ori = await entityHasStockList.getByEntity(req.body.Order.tb_institution_id,req.body.Order.tb_institution_id);
+        body.Order.tb_stock_list_id_des = await entityHasStockList.getByEntity(req.body.Order.tb_institution_id,req.body.Order.tb_entity_id);
+      }
       const dataOrder = {
         id: body.Order.id,
         tb_institution_id: body.Order.tb_institution_id,
@@ -248,7 +253,7 @@ class OrderStockTransferController extends Base {
         resolve(result);
       }
       catch (err) {
-        reject('collaborator.get: ' + err);
+        reject('orderStockTransfer.get: ' + err);
       }
     });
     return promise;

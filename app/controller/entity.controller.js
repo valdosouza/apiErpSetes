@@ -15,8 +15,8 @@ class EntityController extends Base {
         'e.tb_linebusiness_id,  '+
         'l.description name_linebusiness, '+
         'CAST(e.note AS CHAR(1000) CHARACTER SET utf8) note, '+
-        'e.created_at  '+
-        'e."updated_at"  '+
+        'e.created_at,  '+
+        'e.updated_at  '+
         'from tb_entity  e '+
         '   left outer join tb_linebusiness l '+
         '   on (l.id = e.tb_linebusiness_id) '+
