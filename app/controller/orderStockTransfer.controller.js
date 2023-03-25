@@ -38,9 +38,11 @@ class OrderStockTransferController extends Base {
         body.Order.number = await this.getNextNumber(body.Order.tb_institution_id);
       //Verifica se a Entidade e o Usuario são iguais para determinar Estoques automaticamente      
       if ( body.Order.tb_entity_id == body.Order.tb_user_id ){
-        body.Order.tb_stock_list_id_ori = await entityHasStockList.getByEntity(req.body.Order.tb_institution_id,req.body.Order.tb_institution_id);
-        body.Order.tb_stock_list_id_des = await entityHasStockList.getByEntity(req.body.Order.tb_institution_id,req.body.Order.tb_entity_id);
-      }
+        const stock_list_ori = await entityHasStockList.getByEntity(body.Order.tb_institution_id,body.Order.tb_institution_id);       
+        const stock_list_des = await entityHasStockList.getByEntity(body.Order.tb_institution_id,body.Order.tb_entity_id);
+        body.Order.tb_stock_list_id_ori = stock_list_ori[0].tb_stock_list_id;
+        body.Order.tb_stock_list_id_des = stock_list_des[0].tb_stock_list_id;        
+      }      
       const dataOrder = {
         id: body.Order.id,
         tb_institution_id: body.Order.tb_institution_id,
@@ -50,6 +52,7 @@ class OrderStockTransferController extends Base {
         tb_stock_list_id_ori: body.Order.tb_stock_list_id_ori,
         tb_stock_list_id_des: body.Order.tb_stock_list_id_des,
       }
+      
       Tb.create(dataOrder)
         .then(() => {
           resolve(body);

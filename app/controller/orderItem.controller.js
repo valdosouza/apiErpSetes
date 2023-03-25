@@ -15,7 +15,6 @@ class OrderItemController extends Base {
           replacements: [tb_institution_id, tb_order_id, kind],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
-          console.log(data);
           if (data) {
             const NextId = data[0].lastId + 1;
             resolve(NextId);
@@ -32,7 +31,6 @@ class OrderItemController extends Base {
 
   static async insert(item) {
     const promise = new Promise(async (resolve, reject) => {
-      console.log(item);
       const nextId = await this.getNextId(item.tb_institution_id, item.tb_order_id, item.kind);
       item.id = nextId;
       Tb.create(item)
