@@ -73,7 +73,7 @@ class ProdcutController extends Base {
         description = '%' + body.name_product + '%';
         sqltxt += ' and (p.description like ? ) ';
       } else {
-        body.name_product = "";
+        description = "";
         sqltxt += ' and (p.description <> ?) ';
       }
       sqltxt +=

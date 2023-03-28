@@ -124,7 +124,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *     summary: Returns the list of all the Products
  *     tags: [Product]
  *     requestBody:
-  *       content:
+ *       content:
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/ProductParams'

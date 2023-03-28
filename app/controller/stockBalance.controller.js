@@ -79,32 +79,51 @@ class StockBalanceController extends Base {
     return promise;
   }
 
-  static getListBySalesman(tb_institution_id, tb_salesman_id) {
+  static getListBySalesman(body) {
     const promise = new Promise((resolve, reject) => {
+      var description = "";
+      var sqltxt =         
+      'select ' +
+      'stb.tb_institution_id,' +
+      'stb.tb_stock_list_id,' +
+      'stl.description name_stock_list, ' +
+      'stb.tb_merchandise_id, ' +
+      'prd.description name_merchandise, ' +
+      'stb.quantity ' +
+      'from tb_stock_balance stb ' +
+      '  inner join tb_stock_list stl   ' +
+      '  on (stl.id = stb.tb_stock_list_id) ' +
+      '    and (stl.tb_institution_id = stb.tb_institution_id) ' +
+      '  inner join tb_product prd ' +
+      '  on (prd.id = stb.tb_merchandise_id)  ' +
+      '    and (prd.tb_institution_id = stb.tb_institution_id) '+
+      '  inner join tb_entity_has_stock_list ehs  ' +
+      '  on (ehs.tb_stock_list_id = stb.tb_stock_list_id)  ' +
+      '    and (ehs.tb_institution_id = stb.tb_institution_id) ' +
+      '  inner join tb_collaborator c ' +
+      '  on (c.id = ehs.tb_entity_id) ' +
+      '    and (c.tb_institution_id = ehs.tb_institution_id) ' +
+      'where stb.tb_institution_id =?   ' +
+      'and ehs.tb_entity_id =?   '+
+      ' and (prd.active = ?)';
+      if (body.name_product != "") {
+        description = '%' + body.name_product + '%';
+        sqltxt += ' and (prd.description like ? ) ';
+      } else {
+        description = "";
+        sqltxt += ' and (prd.description <> ?) ';
+      }
+
+       
+      sqltxt +=
+        ' order by prd.description '+
+        ' limit ' + ((body.page - 1) * 20) + ',20 ';
+
+      
       Tb.sequelize.query(
-        'select ' +
-        'stb.tb_institution_id,' +
-        'stb.tb_stock_list_id,' +
-        'stl.description name_stock_list, ' +
-        'stb.tb_merchandise_id, ' +
-        'prd.description name_merchandise, ' +
-        'stb.quantity ' +
-        'from tb_stock_balance stb ' +
-        '  inner join tb_stock_list stl   ' +
-        '  on (stl.id = stb.tb_stock_list_id) ' +
-        '    and (stl.tb_institution_id = stb.tb_institution_id) ' +
-        '  inner join tb_product prd ' +
-        '  on (prd.id = stb.tb_merchandise_id)  ' +
-        '  inner join tb_entity_has_stock_list ehs  ' +
-        '  on (ehs.tb_stock_list_id = stb.tb_stock_list_id)  ' +
-        '    and (ehs.tb_institution_id = stb.tb_institution_id) ' +
-        '  inner join tb_collaborator c ' +
-        '  on (c.id = ehs.tb_entity_id) ' +
-        '    and (c.tb_institution_id = ehs.tb_institution_id) ' +
-        'where stb.tb_institution_id =?   ' +
-        'and ehs.tb_entity_id =?   ',
+          sqltxt,
         {
-          replacements: [tb_institution_id, tb_salesman_id],
+          replacements: [body.tb_institution_id, body.tb_salesman_id,'S', description],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           if (data.length > 0) {
@@ -129,7 +148,7 @@ class StockBalanceController extends Base {
           } else {
             var dataResult = {
               id: 0,
-              tb_institution_id: tb_institution_id,
+              tb_institution_id: body.tb_institution_id,
               tb_stock_list_id: 0,
               name_stock_list: "",
             };
@@ -140,7 +159,7 @@ class StockBalanceController extends Base {
           }
         })
         .catch(err => {
-          reject("StockBalance.getListByEnitity: " + err);
+          reject("StockBalance.getListBySalesman: " + err);
         });
     });
     return promise;

@@ -11,8 +11,13 @@ class StockBalanceEndPoint {
   }
 
   static getListBySalesman(req, res) {
-    StockBalanceController.getListBySalesman(req.params.tb_institution_id,
-                                            req.params.tb_salesman_id)
+    if (req.body.page == 0) {
+      res.status(400).send({
+        message: "Page não pode ser 0(Zero)"
+      });
+      return;
+    }
+    StockBalanceController.getListBySalesman(req.body)
     .then(data => {
       res.send(data);
     })

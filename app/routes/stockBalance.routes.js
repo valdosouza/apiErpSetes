@@ -53,6 +53,20 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *         quantity:
  *           type: number
  * 
+ *     StockBalanceParams:
+ *       type: object
+ *       properties:
+ *         page:
+ *           type: integer
+ *         tb_institution_id:
+ *           type: integer 
+ *         tb_salesman_id:
+ *           type: integer  
+ *         id:
+ *           type: integer
+ *         name_product:
+ *           type: string
+ * 
  *   
 */
     
@@ -93,17 +107,15 @@ router.get("/getlist/:tb_institution_id/:tb_stock_list_id/", stockBalance.getLis
   
 /**
  * @swagger
- * /stockbalance/salesman/getlist/{tb_institution_id}/{tb_salesman_id}:
- *  get:
+ * /stockbalance/salesman/getlist/:
+ *  post:
  *    summary: Return stockbalance by the salesman
  *    tags: [StockBalance]
- *    parameters:
- *      - in: path
- *        name: tb_institution_id
- *        required: true
- *      - in: path
- *        name: tb_salesman_id
- *        required: true
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/StockBalanceParams'
  *    responses:
  *      200:
  *        description: The Stock Balance was Listed
@@ -116,7 +128,7 @@ router.get("/getlist/:tb_institution_id/:tb_stock_list_id/", stockBalance.getLis
  *      500:
  *        description: Some error happened
  */
-router.get("/salesman/getlist/:tb_institution_id/:tb_salesman_id/", stockBalance.getListBySalesman);
+router.post("/salesman/getlist/", stockBalance.getListBySalesman);
 
 /**
  * @swagger
