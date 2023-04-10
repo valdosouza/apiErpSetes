@@ -37,12 +37,12 @@ class OrderStockTransferController extends Base {
       if (body.Order.number == 0)
         body.Order.number = await this.getNextNumber(body.Order.tb_institution_id);
       //Verifica se a Entidade e o Usuario são iguais para determinar Estoques automaticamente      
-      if ( body.Order.tb_entity_id == body.Order.tb_user_id ){
-        const stock_list_ori = await entityHasStockList.getByEntity(body.Order.tb_institution_id,body.Order.tb_institution_id);       
-        const stock_list_des = await entityHasStockList.getByEntity(body.Order.tb_institution_id,body.Order.tb_entity_id);
+      if (body.Order.tb_entity_id == body.Order.tb_user_id) {
+        const stock_list_ori = await entityHasStockList.getByEntity(body.Order.tb_institution_id, body.Order.tb_institution_id);
+        const stock_list_des = await entityHasStockList.getByEntity(body.Order.tb_institution_id, body.Order.tb_entity_id);
         body.Order.tb_stock_list_id_ori = stock_list_ori[0].tb_stock_list_id;
-        body.Order.tb_stock_list_id_des = stock_list_des[0].tb_stock_list_id;        
-      }      
+        body.Order.tb_stock_list_id_des = stock_list_des[0].tb_stock_list_id;
+      }
       const dataOrder = {
         id: body.Order.id,
         tb_institution_id: body.Order.tb_institution_id,
@@ -52,7 +52,7 @@ class OrderStockTransferController extends Base {
         tb_stock_list_id_ori: body.Order.tb_stock_list_id_ori,
         tb_stock_list_id_des: body.Order.tb_stock_list_id_des,
       }
-      
+
       Tb.create(dataOrder)
         .then(() => {
           resolve(body);
@@ -385,6 +385,7 @@ class OrderStockTransferController extends Base {
         var dataOrder = await this.getOrder(body.tb_institution_id, body.id);
         if (dataOrder.status == 'A') {
           var items = await orderItem.getList(body.tb_institution_id, body.id);
+          console.log(items);
 
           var dataItem = {};
           for (var item of items) {
@@ -644,7 +645,7 @@ class OrderStockTransferController extends Base {
     });
     return promise;
   }
-  
+
   static async cleanUp(tb_institution_id, id) {
     const promise = new Promise(async (resolve, reject) => {
       try {
@@ -660,6 +661,6 @@ class OrderStockTransferController extends Base {
       }
     });
     return promise;
-  }  
+  }
 }
 module.exports = OrderStockTransferController;

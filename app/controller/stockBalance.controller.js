@@ -18,9 +18,10 @@ class StockBalanceController extends Base {
     return promise;
   }
 
-  static getList(tb_institution_id, tb_stock_list_id) {
+  static getList(body) {
     const promise = new Promise((resolve, reject) => {
-      Tb.sequelize.query(
+      var description = '';
+      var sqltxt =
         'select ' +
         'stb.tb_institution_id, ' +
         'stb.tb_stock_list_id, ' +
@@ -35,9 +36,30 @@ class StockBalanceController extends Base {
         '  inner join tb_product prd ' +
         '  on (prd.id = stb.tb_merchandise_id)  ' +
         'where stb.tb_institution_id =? ' +
-        '  and stb.tb_stock_list_id =? ',
+        '  and stb.tb_stock_list_id =? ' +
+        ' and (prd.active = ?)';
+
+      if (body.name_product != "") {
+        description = '%' + body.name_product + '%';
+        sqltxt += ' and (prd.description like ? ) ';
+      } else {
+        description = '';
+        sqltxt += ' and (prd.description <> ?) ';
+      }
+
+
+      sqltxt += ' order by prd.description ';
+      if (body.page > 0) {
+        sqltxt += ' limit ' + ((body.page - 1) * 20) + ',20 ';
+      }
+      console.log( body.tb_institution_id); 
+      console.log( body.tb_stock_list_id);
+      console.log( 'S');
+      console.log( description);
+      Tb.sequelize.query(
+        sqltxt,
         {
-          replacements: [tb_institution_id, tb_stock_list_id],
+          replacements: [body.tb_institution_id, body.tb_stock_list_id, 'S', description],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           if (data.length > 0) {
@@ -68,8 +90,8 @@ class StockBalanceController extends Base {
             };
             var items = [];
             dataResult.items = items;
-            resolve(dataResult);            
-            
+            resolve(dataResult);
+
           }
         })
         .catch(err => {
@@ -82,30 +104,30 @@ class StockBalanceController extends Base {
   static getListBySalesman(body) {
     const promise = new Promise((resolve, reject) => {
       var description = "";
-      var sqltxt =         
-      'select ' +
-      'stb.tb_institution_id,' +
-      'stb.tb_stock_list_id,' +
-      'stl.description name_stock_list, ' +
-      'stb.tb_merchandise_id, ' +
-      'prd.description name_merchandise, ' +
-      'stb.quantity ' +
-      'from tb_stock_balance stb ' +
-      '  inner join tb_stock_list stl   ' +
-      '  on (stl.id = stb.tb_stock_list_id) ' +
-      '    and (stl.tb_institution_id = stb.tb_institution_id) ' +
-      '  inner join tb_product prd ' +
-      '  on (prd.id = stb.tb_merchandise_id)  ' +
-      '    and (prd.tb_institution_id = stb.tb_institution_id) '+
-      '  inner join tb_entity_has_stock_list ehs  ' +
-      '  on (ehs.tb_stock_list_id = stb.tb_stock_list_id)  ' +
-      '    and (ehs.tb_institution_id = stb.tb_institution_id) ' +
-      '  inner join tb_collaborator c ' +
-      '  on (c.id = ehs.tb_entity_id) ' +
-      '    and (c.tb_institution_id = ehs.tb_institution_id) ' +
-      'where stb.tb_institution_id =?   ' +
-      'and ehs.tb_entity_id =?   '+
-      ' and (prd.active = ?)';
+      var sqltxt =
+        'select ' +
+        'stb.tb_institution_id,' +
+        'stb.tb_stock_list_id,' +
+        'stl.description name_stock_list, ' +
+        'stb.tb_merchandise_id, ' +
+        'prd.description name_merchandise, ' +
+        'stb.quantity ' +
+        'from tb_stock_balance stb ' +
+        '  inner join tb_stock_list stl   ' +
+        '  on (stl.id = stb.tb_stock_list_id) ' +
+        '    and (stl.tb_institution_id = stb.tb_institution_id) ' +
+        '  inner join tb_product prd ' +
+        '  on (prd.id = stb.tb_merchandise_id)  ' +
+        '    and (prd.tb_institution_id = stb.tb_institution_id) ' +
+        '  inner join tb_entity_has_stock_list ehs  ' +
+        '  on (ehs.tb_stock_list_id = stb.tb_stock_list_id)  ' +
+        '    and (ehs.tb_institution_id = stb.tb_institution_id) ' +
+        '  inner join tb_collaborator c ' +
+        '  on (c.id = ehs.tb_entity_id) ' +
+        '    and (c.tb_institution_id = ehs.tb_institution_id) ' +
+        'where stb.tb_institution_id =?   ' +
+        'and ehs.tb_entity_id =?   ' +
+        ' and (prd.active = ?)';
       if (body.name_product != "") {
         description = '%' + body.name_product + '%';
         sqltxt += ' and (prd.description like ? ) ';
@@ -114,16 +136,16 @@ class StockBalanceController extends Base {
         sqltxt += ' and (prd.description <> ?) ';
       }
 
-       
+
       sqltxt +=
-        ' order by prd.description '+
+        ' order by prd.description ' +
         ' limit ' + ((body.page - 1) * 20) + ',20 ';
 
-      
+
       Tb.sequelize.query(
-          sqltxt,
+        sqltxt,
         {
-          replacements: [body.tb_institution_id, body.tb_salesman_id,'S', description],
+          replacements: [body.tb_institution_id, body.tb_salesman_id, 'S', description],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           if (data.length > 0) {
@@ -255,7 +277,7 @@ class StockBalanceController extends Base {
         '      and (ct.tb_institution_id = ehs.tb_institution_id)  ' +
         '  where stb.tb_institution_id =? ' +
         '  and ct.tb_salesman_id =? ' +
-        '  group by 1,2 '+
+        '  group by 1,2 ' +
         '   union ' +
         '   select  ' +
         '   stb.tb_merchandise_id,  ' +
@@ -278,7 +300,7 @@ class StockBalanceController extends Base {
         ' ) tb_stock_by_salesman ' +
         ' group by 1,2  ',
         {
-          replacements: [tb_institution_id, tb_salesman_id,tb_institution_id, tb_salesman_id],
+          replacements: [tb_institution_id, tb_salesman_id, tb_institution_id, tb_salesman_id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           if (data.length > 0) {

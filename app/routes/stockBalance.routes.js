@@ -62,6 +62,8 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *           type: integer 
  *         tb_salesman_id:
  *           type: integer  
+ *         tb_stock_list_id:
+ *           type: integer    
  *         id:
  *           type: integer
  *         name_product:
@@ -80,17 +82,15 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
 
 /**
  * @swagger
- * /stockbalance/getlist/{tb_institution_id}/{tb_stock_list_id}:
- *  get:
+ * /stockbalance/getlist/:
+ *  post:
  *    summary: Return stockbalance by the tb_institution_id and tb_stock_list_id
  *    tags: [StockBalance]
- *    parameters:
- *      - in: path
- *        name: tb_institution_id
- *        required: true
- *      - in: path
- *        name: tb_stock_list_id 
- *        required: true
+ *    requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/StockBalanceParams'
  *    responses:
  *      200:
  *        description: The Stock Balance was Listed
@@ -103,7 +103,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *      500:
  *        description: Some error happened
  */
-router.get("/getlist/:tb_institution_id/:tb_stock_list_id/", stockBalance.getList);
+router.post("/getlist/", stockBalance.getList);
   
 /**
  * @swagger
