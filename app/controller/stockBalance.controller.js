@@ -35,6 +35,7 @@ class StockBalanceController extends Base {
         '    and (stl.tb_institution_id = stb.tb_institution_id) ' +
         '  inner join tb_product prd ' +
         '  on (prd.id = stb.tb_merchandise_id)  ' +
+        '  and (prd.tb_institution_id = stb.tb_institution_id)   '+
         'where stb.tb_institution_id =? ' +
         '  and stb.tb_stock_list_id =? ' +
         ' and (prd.active = ?)';
@@ -52,10 +53,7 @@ class StockBalanceController extends Base {
       if (body.page > 0) {
         sqltxt += ' limit ' + ((body.page - 1) * 20) + ',20 ';
       }
-      console.log( body.tb_institution_id); 
-      console.log( body.tb_stock_list_id);
-      console.log( 'S');
-      console.log( description);
+      
       Tb.sequelize.query(
         sqltxt,
         {
@@ -116,12 +114,15 @@ class StockBalanceController extends Base {
         '  inner join tb_stock_list stl   ' +
         '  on (stl.id = stb.tb_stock_list_id) ' +
         '    and (stl.tb_institution_id = stb.tb_institution_id) ' +
+        
         '  inner join tb_product prd ' +
         '  on (prd.id = stb.tb_merchandise_id)  ' +
         '    and (prd.tb_institution_id = stb.tb_institution_id) ' +
+        
         '  inner join tb_entity_has_stock_list ehs  ' +
         '  on (ehs.tb_stock_list_id = stb.tb_stock_list_id)  ' +
         '    and (ehs.tb_institution_id = stb.tb_institution_id) ' +
+        
         '  inner join tb_collaborator c ' +
         '  on (c.id = ehs.tb_entity_id) ' +
         '    and (c.tb_institution_id = ehs.tb_institution_id) ' +
