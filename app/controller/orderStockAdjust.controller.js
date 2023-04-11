@@ -58,6 +58,7 @@ class OrderStockAdjustController extends Base {
   static async insertOrderItem(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
+        console.log(body);
         var dataItem = {};
         for (var item of body.Items) {
           dataItem = {
@@ -65,12 +66,13 @@ class OrderStockAdjustController extends Base {
             tb_institution_id: body.Order.tb_institution_id,
             tb_order_id: body.Order.id,
             terminal: 0,
-            tb_stock_list_id: body.tb_stock_list_id,
+            tb_stock_list_id: body.Order.tb_stock_list_id,
             tb_product_id: item.tb_product_id,
             quantity: item.quantity,
             unit_value: item.unit_value,
             kind: 'StockAdjustment',
-          };          
+          };
+          console.log(dataItem);
           //Quanto o insert é mais complexo como getNext precisa do await no loop          
           await orderItem.insert(dataItem);
         };
