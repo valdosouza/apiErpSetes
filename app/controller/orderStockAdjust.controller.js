@@ -65,12 +65,12 @@ class OrderStockAdjustController extends Base {
             tb_institution_id: body.Order.tb_institution_id,
             tb_order_id: body.Order.id,
             terminal: 0,
-            tb_stock_list_id: item.tb_stock_list_id,
+            tb_stock_list_id: body.tb_stock_list_id,
             tb_product_id: item.tb_product_id,
             quantity: item.quantity,
             unit_value: item.unit_value,
             kind: 'StockAdjustment',
-          };
+          };          
           //Quanto o insert é mais complexo como getNext precisa do await no loop          
           await orderItem.insert(dataItem);
         };
@@ -377,7 +377,7 @@ class OrderStockAdjustController extends Base {
               quantity: item.quantity,
               operation: "StockAdjustment"
             };
-            console.log(dataItem);
+            
             await stockStatement.insert(dataItem);
 
           };
