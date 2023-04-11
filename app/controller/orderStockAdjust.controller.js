@@ -191,6 +191,7 @@ class OrderStockAdjustController extends Base {
         '  etd.name_company name_entity, ' +
         '  ord.dt_record,  ' +
         '  ora.number,  ' +
+        '  ora.direction,'+
         '  ord.status, ' +
         ' CAST(ord.note AS CHAR(1000) CHARACTER SET utf8) note ' +
         'from tb_order ord ' +
@@ -222,10 +223,12 @@ class OrderStockAdjustController extends Base {
         const dataOrder = await this.getOrder(tb_institution_id, id);
         result.Order = dataOrder;
         const dataItems = await orderItem.getList(tb_institution_id, id);
+        
+        if (dataItems.length > 0){
         result.Items = dataItems;
         result.Order.tb_stock_list_id = dataItems[0].tb_stock_list_id;
         result.Order.name_stock_list =  dataItems[0].name_stock_list;
-
+        }
         resolve(result);
       }
       catch (err) {
@@ -241,9 +244,8 @@ class OrderStockAdjustController extends Base {
         id: body.Order.id,
         tb_institution_id: body.Order.tb_institution_id,
         terminal: 0,
-        tb_user_id: body.Order.tb_user_id,
-        dt_record: body.Order.dt_record,
-        note: body.Order.note
+        tb_entity_id: body.Order.tb_entity_id,
+        direction : body.Order.direction,
       }
       Tb.update(dataOrderStockAdjust, {
         where: {
@@ -366,24 +368,20 @@ class OrderStockAdjustController extends Base {
               tb_order_id: body.id,
               terminal: 0,
               tb_order_item_id: item.id,
-              tb_stock_list_id: 0,
+              tb_stock_list_id: item.tb_stock_list_id,
               local: "web",
               kind: "Fechamento",
               dt_record: body.dt_record,
-              direction: "S",
+              direction: body.direction,
               tb_merchandise_id: item.tb_product_id,
               quantity: item.quantity,
               operation: "StockAdjustment"
             };
-            //Origen
-            dataItem['tb_stock_list_id'] = dataOrder.tb_stock_list_id_ori;
-            dataItem['direction'] = 'S';
+            console.log(dataItem);
             await stockStatement.insert(dataItem);
-            //Destiny
-            dataItem['tb_stock_list_id'] = dataOrder.tb_stock_list_id_des;
-            dataItem['direction'] = 'E';
-            await stockStatement.insert(dataItem);
+
           };
+          
           await order.updateStatus(body.tb_institution_id, body.id, 'F');
           resolve("200");
         } else {
@@ -410,22 +408,21 @@ class OrderStockAdjustController extends Base {
               tb_order_id: body.id,
               terminal: 0,
               tb_order_item_id: item.id,
-              tb_stock_list_id: 0,
+              tb_stock_list_id: item.tb_stock_list_id,
               local: "web",
               kind: "Fechamento",
               dt_record: body.dt_record,
-              direction: "S",
+              direction: "",
               tb_merchandise_id: item.tb_product_id,
               quantity: item.quantity,
               operation: "StockAdjustment"
             };
-            //Origen - Inverte direção ao reabrir
-            dataItem['tb_stock_list_id'] = dataOrder.tb_stock_list_id_ori;
-            dataItem['direction'] = 'E';
-            await stockStatement.insert(dataItem);
-            //Destiny - Inverte direção ao reabrir
-            dataItem['tb_stock_list_id'] = dataOrder.tb_stock_list_id_des;
-            dataItem['direction'] = 'S';
+            if (body.direction == "E"){
+              dataItem['direction'] = 'S';
+            }else{
+              dataItem['direction'] = 'E';
+            }
+
             await stockStatement.insert(dataItem);
           };
           await order.updateStatus(body.tb_institution_id, body.id, 'A');

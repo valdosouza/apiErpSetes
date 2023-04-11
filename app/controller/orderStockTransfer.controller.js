@@ -385,8 +385,7 @@ class OrderStockTransferController extends Base {
         var dataOrder = await this.getOrder(body.tb_institution_id, body.id);
         if (dataOrder.status == 'A') {
           var items = await orderItem.getList(body.tb_institution_id, body.id);
-          console.log(items);
-
+          
           var dataItem = {};
           for (var item of items) {
             dataItem = {
