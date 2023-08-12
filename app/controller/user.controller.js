@@ -143,13 +143,13 @@ class UserController extends Base {
           });
         //Atualiza o Mailing
         MailingController.findByEntityId(user.id)
-        .then(async (data) =>  {
-          const dataMailing = {
-            id : data[0].id,
-            email: user.email
-          }
-          await MailingController.update(dataMailing)
-        });  
+          .then(async (data) => {
+            const dataMailing = {
+              id: data[0].id,
+              email: user.email
+            }
+            await MailingController.update(dataMailing)
+          });
         //Atualiza a institution
         const dataInstitutionHU = {
           tb_institution_id: user.tb_institution_id,
@@ -263,28 +263,30 @@ class UserController extends Base {
   static getUserAuth(email, password) {
 
     const promise = new Promise((resolve, reject) => {
-      TbUser.sequelize.query(
-        'Select ihu.tb_institution_id, u.id, m.email, u.password, "" token ' +
-        'from tb_entity e ' +
-        '  inner join tb_entity_has_mailing ehm ' +
-        '  on (ehm.tb_entity_id = e.id) ' +
-        '  inner join tb_mailing m  ' +
-        '  on (ehm.tb_mailing_id = m.id)  ' +
-        '  inner join tb_user u  ' +
-        '  on (u.id = e.id) ' +
-        '  inner join tb_institution_has_user ihu  ' +
-        '  on (ihu.tb_user_id = u.id)  ' +
-        'where ( m.email=? ) ' +
-        ' and ( u.password=? ) ',
-        {
-          replacements: [email, password.toUpperCase()],
-          type: TbUser.sequelize.QueryTypes.SELECT
-        }).then(data => {
-          resolve(data);
-        })
-        .catch(err => {
-          reject(new Error(err + " |" + "Algum erro aconteceu ao buscar o Usuário"));
-        });
+      try {
+        TbUser.sequelize.query(
+          'Select ihu.tb_institution_id, u.id, m.email, u.password, "" token ' +
+          'from tb_entity e ' +
+          '  inner join tb_entity_has_mailing ehm ' +
+          '  on (ehm.tb_entity_id = e.id) ' +
+          '  inner join tb_mailing m  ' +
+          '  on (ehm.tb_mailing_id = m.id)  ' +
+          '  inner join tb_user u  ' +
+          '  on (u.id = e.id) ' +
+          '  inner join tb_institution_has_user ihu  ' +
+          '  on (ihu.tb_user_id = u.id)  ' +
+          'where ( m.email=? ) ' +
+          ' and ( u.password=? ) ',
+          {
+            replacements: [email, password.toUpperCase()],
+            type: TbUser.sequelize.QueryTypes.SELECT
+          }).then(data => {
+            resolve(data);
+          })
+
+      } catch (error) {
+        reject(new Error(err + " |" + "Algum erro aconteceu ao buscar o Usuário"));
+      }
     });
     return promise;
   }

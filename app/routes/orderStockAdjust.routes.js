@@ -10,111 +10,73 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * @swagger
  * components:
  *   schemas:
- *     OrderStockAdjust:
+ *     orderStockAdjust:
  *       type: object
- *       required:
- *         - id
- *         - tb_institution_id
- *         - tb_user_id
- *         - tb_entity_id
- *         - dt_record
- *         - status
- *         - tb_stock_list_id
  *       properties:
  *         id:
  *           type: integer
  *         tb_institution_id:
  *           type: integer
- *         tb_user_id:
+ *         terminal:
  *           type: integer
- *         dt_record:
- *           type: string
  *         number:
  *           type: integer
  *         tb_entity_id:
  *           type: integer
  *         name_entity:
+ *           type: string
+ *         doc_entity:
  *           type: string 
- *         tb_stock_list_id:
- *           type: integer
- *         name_stock_list:
- *           type: string  
- *         tb_stock_list_id_des:
- *           type: integer
- *         name_stock_list_des:
- *           type: string
- *         note:
- *           type: string 
- *         status:
- *           type: string
- *  
- *     OrderStockAdjustList:
- *       type: object
- *       properties:
- *         id:
- *           type: integer
- *         tb_user_id:
- *           type: integer
- *         dt_record:
- *           type: string
- *         number:
- *           type: integer
- *         tb_entity_id:
- *           type: integer
- *         name_entity:
- *           type: string 
- *         status:
- *           type: string
  * 
- *     OrderStockAdjustItem:
- *       type: object
- *       required:
- *         - tb_product_id
- *         - unit_value
- *         - quantity
- *       properties:
- *         tb_product_id:
- *           type: integer
- *         name_product:
- *           type: string
- *         unit_value:
- *           type: number
- *         quantity:
- *           type: number
  * 
- *     OrderStockAdOperation:
- *       type: object
- *       required:
- *         - tb_institution_id
- *         - tb_order_id 
- *         - dt_record
- *         - direction 
- *       properties:
- *         tb_institution_id:
- *           type: integer
- *         id:
- *           type: integer
- *         dt_record:
- *           type: string 
- *
- *     OrderStockAdjustMain:
+ *     objOrderStockAdjust:
  *       type: object
  *       properties:
- *         Order:
- *           $ref: '#/components/schemas/OrderStockAdjust'
- *         Items:
+ *         order:
+ *           $ref: '#/components/schemas/order'
+ *         orderStockAdjust:
+ *           $ref: '#/components/schemas/orderStockAdjust'
+ *         totalizer:
+ *           $ref: '#/components/schemas/orderTotalizer'
+ *         items:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/OrderStockAdjustItem'
+ *              $ref: '#/components/schemas/orderItems'
+ *  
  */
  
  
+ 
+/**
+* @swagger
+* tags:
+*   name: OrderStockAdjust
+*   description: The OrderStockAdjust managing API
+*/
+
  /**
-  * @swagger
-  * tags:
-  *   name: OrderStockAdjust
-  *   description: The OrderStockAdjust managing API
-  */
+ * @swagger
+ * /orderstockadjust/sync:
+ *   post:
+ *     summary: Create a new pricelist
+ *     tags: [OrderStockAdjust]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/objOrderStockAdjust'
+ *     responses:
+ *       200:
+ *         description: The objOrderStockAdjust was successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/objOrderStockAdjust'
+ *       500:
+ *         description: Some server error
+ */
+ router.post("/sync/", orderstockadjust.sync);
 
 /**
  * @swagger
@@ -127,14 +89,14 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/OrderStockAdjustMain'
+ *             $ref: '#/components/schemas/objOrderStockAdjust'
  *     responses:
  *       200:
  *         description: The OrderStockAdjust was successfully created
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/OrderStockAdjustMain'
+ *               $ref: '#/components/schemas/objOrderStockAdjust'
  *       500:
  *         description: Some server error
  */
@@ -163,9 +125,9 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/OrderStockAdjustList'
- */
-  //router.get("/getlist/:tb_institution_id", orderstockadjust.getList);
+ */  
   protectedRouter.get("/getlist/:tb_institution_id", orderstockadjust.getList);
+
 /**
  * @swagger
  * /orderstockadjust/get/{tb_institution_id}/{id}:
@@ -187,10 +149,10 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/OrderStockAdjustMain'
+ *               $ref: '#/components/schemas/objOrderStockAdjust'
  */
   router.get("/get/:tb_institution_id/:id", orderstockadjust.get);
-  //protectedRouter.get("/get/:tb_institution_id/:id", orderstockadjust.get);
+  
  /**
  * @swagger
  * /orderstockadjust:
@@ -202,14 +164,14 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *      content:
  *        application/json:
  *          schema:
- *            $ref: '#/components/schemas/OrderStockAdjustMain'
+ *            $ref: '#/components/schemas/objOrderStockAdjust'
  *    responses:
  *      200:
  *        description: The OrderStockAdjust was updated
  *        content:
  *          application/json:
  *            schema:
- *              $ref: '#/components/schemas/OrderStockAdjustMain'
+ *              $ref: '#/components/schemas/objOrderStockAdjust'
  *      404:
  *        description: The orderstockadjust was not found
  *      500:

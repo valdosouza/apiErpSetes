@@ -58,23 +58,23 @@ module.exports = sequelize => {
       comment: null,
       field: "product_value"
     },
-    IPI_value: {
+    ipi_value: {
       type: DataTypes.DECIMAL,
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
       comment: null,
-      field: "IPI_value"
+      field: "ipi_value"
     },
-    discount_aliqu: {
+    discount_aliquot: {
       type: DataTypes.DECIMAL,
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
       comment: null,
-      field: "discount_aliqu"
+      field: "discount_aliquot"
     },
     discount_value: {
       type: DataTypes.DECIMAL,

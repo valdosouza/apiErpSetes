@@ -39,6 +39,30 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
   *   description: The PriceList managing API
   */
 
+ /**
+ * @swagger
+ * /pricelist/sync:
+ *   post:
+ *     summary: Create a new pricelist
+ *     tags: [PriceList]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PriceList'
+ *     responses:
+ *       200:
+ *         description: The PriceList was successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PriceList'
+ *       500:
+ *         description: Some server error
+ */
+ router.post("/sync/", pricelist.sync);
+
 /**
  * @swagger
  * /pricelist:

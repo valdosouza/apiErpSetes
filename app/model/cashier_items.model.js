@@ -4,15 +4,6 @@ const {
   
   module.exports = sequelize => {
     const attributes = {
-      id: {
-        type: DataTypes.INTEGER(11),
-        allowNull: false,
-        defaultValue: null,
-        primaryKey: true,
-        autoIncrement: false,
-        comment: null,
-        field: "id"
-      },
       tb_institution_id: {
         type: DataTypes.INTEGER(11),
         allowNull: false,
@@ -40,14 +31,14 @@ const {
         comment: null,
         field: "tb_cashier_id"
       },
-      description: {
-        type: DataTypes.STRING(100),
+      tb_payment_types_id: {
+        type: DataTypes.INTEGER(11),
         allowNull: true,
         defaultValue: null,
         primaryKey: true,
         autoIncrement: false,
         comment: null,
-        field: "description"
+        field: "tb_payment_types_id"
       },
       kind: {
         type: DataTypes.STRING(25),
@@ -66,15 +57,6 @@ const {
         autoIncrement: false,
         comment: null,
         field: "tag_value"
-      },
-      color: {
-        type: DataTypes.STRING(25),
-        allowNull: true,
-        defaultValue: null,
-        primaryKey: false,
-        autoIncrement: false,
-        comment: null,
-        field: "color"
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -96,10 +78,10 @@ const {
       }
     };
     const options = {
-      tableName: "tb_cashier_closure",
+      tableName: "tb_cashier_items",
       comment: "",
       timestamps : true    
     };
-    const CashierClosureModel = sequelize.define("tb_cashier_closure_model", attributes, options);
-    return CashierClosureModel;
+    const CashierItemsModel = sequelize.define("tb_cashier_items_model", attributes, options);
+    return CashierItemsModel;
   };

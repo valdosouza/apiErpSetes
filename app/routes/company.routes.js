@@ -10,14 +10,14 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * @swagger
  * components:
  *   schemas:
- *     Company:
+ *     company:
  *       type: object
  *       required:
  *         - id
  *         - cnpj
  *       properties:
  *         id:
- *           type: Integer
+ *           type: integer
  *         cnpj:
  *           type: string  
  *         ie:

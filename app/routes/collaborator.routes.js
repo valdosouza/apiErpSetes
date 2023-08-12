@@ -10,7 +10,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * @swagger
  * components:
  *   schemas:
- *     Collaborator:
+ *     collaborator:
  *       type: object
  *       properties:
  *         id:
@@ -48,22 +48,14 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *         email:
  *           type: string
  * 
- *     ObjCollaborator:
+ *     objCollaborator:
  *       type: object
  *       properties:
  *         collaborator:
- *           $ref: '#/components/schemas/Collaborator'
- *         entity:
- *           $ref: '#/components/schemas/Entity' 
- *         person:
- *           $ref: '#/components/schemas/Person'  
- *         address:
- *           $ref: '#/components/schemas/Address' 
- *         phone:
- *           $ref: '#/components/schemas/Phone'  
- *         user:
- *           $ref: '#/components/schemas/UserColab'               
- 
+ *           $ref: '#/components/schemas/collaborator'
+ *         fiscal:
+ *           $ref: '#/components/schemas/fiscal' 
+ *  
  *     ListCollaborator:
  *       type: object
  *       properties:
@@ -102,7 +94,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *       content:
  *        application/json:
  *          schema:
- *            $ref: '#/components/schemas/ObjCollaborator'
+ *            $ref: '#/components/schemas/objCollaborator'
  *     responses:
  *       200:
  *         description: The Collaborator was successfully created
@@ -161,7 +153,7 @@ router.get("/getlist/:tb_institution_id/", collaborator.getList);
  *         content:
  *           application/json:
  *             schema: 
- *               $ref: '#/components/schemas/ObjCollaborator'
+ *               $ref: '#/components/schemas/objCollaborator'
  */
 router.get("/:tb_institution_id/:id/", collaborator.get);
 

@@ -39,6 +39,18 @@ routes.use("/stocklist", stockList);
 const paymentType = require("../routes/paymentTypes.routes");
 routes.use("/paymenttype", paymentType);
 
+const category = require("../routes/category.routes");
+routes.use("/category", category);
+
+const brand = require("../routes/brand.routes");
+routes.use("/brand", brand);
+
+const package = require("../routes/package.routes");
+routes.use("/package", package);
+
+const measure = require("../routes/measure.routes");
+routes.use("/measure", measure);
+
 const lineBusinesse = require("../routes/lineBusiness.routes");
 routes.use("/linebusiness", lineBusinesse);
 
@@ -48,14 +60,31 @@ routes.use("/collaborator", collaborator);
 const customer = require("../routes/customer.routes");
 routes.use("/customer", customer);
 
+const provider = require("../routes/provider.routes");
+routes.use("/provider", provider);
+
 const priceList = require("../routes/priceList.routes");
 routes.use("/pricelist", priceList);
+
+const price = require("../routes/price.routes");
+routes.use("/price", price);
 
 const salesroute = require("../routes/salesRoute.routes");
 routes.use("/salesroute", salesroute);
 
+const salesman = require("../routes/salesman.routes");
+routes.use("/salesman", salesman);
+
+
 const product = require("../routes/product.routes");
 routes.use("/product", product);
+
+const merchandise = require("../routes/merchandise.routes");
+routes.use("/merchandise", merchandise);
+
+const stock = require("../routes/stock.routes");
+routes.use("/stock", stock);
+
 
 const stockbalance = require("../routes/stockBalance.routes");
 routes.use("/stockbalance", stockbalance);
@@ -74,6 +103,12 @@ routes.use("/orderbonus", orderbonus);
 
 const ordersale = require("../routes/orderSale.routes");
 routes.use("/ordersale", ordersale);
+
+const orderpurchase = require("../routes/orderPurchase.routes");
+routes.use("/orderpurchase", orderpurchase);
+
+const invoiceMerchandise = require("../routes/invoicemerchandise.routes");
+routes.use("/invoicemerchandise", invoiceMerchandise);
 
 const orderconsignment = require("../routes/orderConsignment.routes");
 routes.use("/orderconsignment", orderconsignment);

@@ -10,7 +10,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * @swagger
  * components:
  *   schemas:
- *     Customer:
+ *     customer:
  *       type: object
  *       properties:
  *         id:
@@ -44,45 +44,18 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *         active:
  *           type: string 
  * 
- *     ObjCustomer:
+ *     objCustomer:
  *       type: object
  *       properties:
  *         customer:
- *           $ref: '#/components/schemas/Customer'
- *         entity:
- *           $ref: '#/components/schemas/Entity' 
- *         person:
- *           $ref: '#/components/schemas/Person'  
- *         company:
- *           $ref: '#/components/schemas/Company'
- *         address:
- *           $ref: '#/components/schemas/Address' 
- *         phone:
- *           $ref: '#/components/schemas/Phone'  
+ *           $ref: '#/components/schemas/customer'
+ *         fiscal:
+ *           $ref: '#/components/schemas/fiscal' 
+ * 
  *             
  *     ListCustomer:
  *       type: object
  *       properties:
- *         id:
- *           type: integer
- *         name_company:
- *           type: string
- *         nick_trade:
- *           type: string
- *         doc_kind:
- *           type: string
- *         doc_number:
- *           type: string
- 
- *     ListCustomerByRoute:
- *       type: object
- *       properties:
- *         tb_sales_route_id:
- *           type: integer
- *         name_sales_routed:
- *           type: string 
- *         sequence:
- *           type: integer
  *         id:
  *           type: integer
  *         name_company:
@@ -94,22 +67,17 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *         doc_number:
  *           type: string
  * 
- *     ListCustomerBySalesRoute:
+ * 
+ *     customerParams:
  *       type: object
  *       properties:
- *         tb_salesman_id:
+ *         page:
  *           type: integer
- *         name_salesman:
- *           type: string 
+ *         tb_institution_id:
+ *           type: integer 
  *         id:
  *           type: integer
- *         name_company:
- *           type: string
- *         nick_trade:
- *           type: string
- *         doc_type:
- *           type: string
- *         doc_number:
+ *         name_customer:
  *           type: string 
  */
 
@@ -122,6 +90,30 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
 
 /**
  * @swagger
+ * /customer/sync:
+ *   post:
+ *     summary: Sincronize a customer
+ *     tags: [Customer]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/objCustomer'
+ *     responses:
+ *       200:
+ *         description: The Salesman was successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/objCustomer'
+ *       500:
+ *         description: Some server error
+ */
+router.post("/sync", customer.sync);
+
+/**
+ * @swagger
  * /customer:
  *   post:
  *     summary: Create a new customer
@@ -131,7 +123,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *       content:
  *        application/json:
  *          schema:
- *            $ref: '#/components/schemas/ObjCustomer'
+ *            $ref: '#/components/schemas/objCustomer'
  *     responses:
  *       200:
  *         description: The Customer was successfully created
@@ -164,34 +156,33 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *         content:
  *           application/json:
  *             schema: 
- *               $ref: '#/components/schemas/ObjCustomer'
+ *               $ref: '#/components/schemas/objCustomer'
  */
  router.get("/get/:tb_institution_id/:id", customer.getCustomer);
   
 /**
  * @swagger
- * /customer/getlist/{tb_institution_id}:
- *   get:
- *     summary: Returns the list of all the Customer
+ * /customer/getlist/:
+ *   post:
+ *     summary: Returns the list of all the Customers
  *     tags: [Customer]
- *     parameters:
- *      - in: path
- *        name: tb_institution_id
- *        required: true
- *        description: The Customer tb_institution_id
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/customerParams'
  *     responses:
  *       200:
- *         description: The list of collaborator
+ *         description: The list of the customers
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/ListCustomer'
- *       500:
- *         description: Some server error 
  */
- router.get("/getlist/:tb_institution_id", customer.getList);
+
+router.post("/getlist/", customer.getList);
 
  /**
  * @swagger

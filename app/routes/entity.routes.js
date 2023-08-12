@@ -10,7 +10,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * @swagger
  * components:
  *   schemas:
- *     Entity:
+ *     entity:
  *       type: object
  *       required:
  *         - id
@@ -31,7 +31,38 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *           type: string 
  *         note:
  *           type: string
+ * 
+ * 
+ *     objEntity:
+ *       type: object
+ *       properties:
+ *         description:
+ *           type: string 
+ *         tb_institution_id:
+ *           type: integer 
+ *         webId:
+ *           type: integer 
+ *         terminal:
+ *           type: integer
+ *         page:
+ *           type: integer
+ *         date_change:
+ *           type: string
+ *         cnpj_institution:
+ *           type: string
+ *         entity:
+ *           $ref: '#/components/schemas/entity' 
+ *         addressList:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/address' 
+ *         phoneList:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/phone'  
+ * 
  */
+
 
  /**
   * @swagger
@@ -51,14 +82,14 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Entity'
+ *             $ref: '#/components/schemas/objEntity'
  *     responses:
  *       200:
  *         description: The Entity was successfully created
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Entity'
+ *               $ref: '#/components/schemas/objEntity'
  *       500:
  *         description: Some server error
  */
@@ -81,7 +112,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Entity'
+ *                 $ref: '#/components/schemas/objEntity'
  */
 
 router.get("/getlist/:tb_institution_id", entity.getList);
@@ -104,14 +135,14 @@ router.get("/getlist/:tb_institution_id", entity.getList);
  *      content:
  *        application/json:
  *          schema:
- *            $ref: '#/components/schemas/Entity'
+ *            $ref: '#/components/schemas/objEntity'
  *    responses:
  *      200:
  *        description: The Entity was updated
  *        content:
  *          application/json:
  *            schema:
- *              $ref: '#/components/schemas/Entity'
+ *              $ref: '#/components/schemas/objEntity'
  *      404:
  *        description: The entity was not found
  *      500:

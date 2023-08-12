@@ -1,11 +1,11 @@
 const Base = require('./base.controller.js');
 const db = require("../model");
 const Tb = db.ordersale;
-const order = require('./order.controller.js');
-const orderItem = require('./orderItemSale.controller.js');
-const stockStatement = require('./stockStatement.controller.js');
-const orderSaleCard = require('./orderSaleCard.controller.js');
-const orderPaid = require('./orderPaid.controller.js');
+const orderController = require('./order.controller.js');
+const orderBilling = require('./orderBilling.controller.js');
+const orderTotalizer = require('./orderTotalizer.controller.js');
+const orderItemController = require('./orderItem.controller.js');
+const fiscalController = require('./fiscal.controller.js');
 
 class OrderSaleController extends Base {
   static async getNextNumber(tb_institution_id) {
@@ -18,12 +18,11 @@ class OrderSaleController extends Base {
           replacements: [tb_institution_id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
-          if (data) {
-            const nextNumber = data[0].lastNumber + 1;
-            resolve(nextNumber);
-          } else {
-            resolve(1);
+          var nextNumber = 1;
+          if (data.length > 0) {
+            nextNumber = data[0].lastNumber + 1;
           }
+          resolve(nextNumber);
         })
         .catch(err => {
           reject('orderSale.getNexNumber: ' + err);
@@ -32,24 +31,91 @@ class OrderSaleController extends Base {
     return promise;
   }
 
+  static async sync(body) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        var regSalesman = await fiscalController.getByDocNumber(body.sale.doc_salesman);
+        if (regSalesman.id > 0)
+          body.order.tb_user_id = regSalesman.id
+        else
+          body.order.tb_user_id = body.sale.tb_institution_id;
+
+        var regCustomer = await fiscalController.getByDocNumber(body.sale.doc_customer);
+        body.sale.tb_customer_id = regCustomer.id;
+        body.sale.tb_salesman_id = body.order.tb_user_id;
+        delete body.sale.doc_customer;
+        delete body.sale.doc_salesman;
+        orderController.sync(body.order);
+        var regOrderSale = await this.getById(body.sale.id, body.sale.tb_institution_id, body.sale.terminal);
+        if (regOrderSale.id == 0) {
+          Tb.create(body.sale);
+        } else {
+          Tb.update(body.sale, {
+            where: {
+              tb_institution_id: body.sale.tb_institution_id,
+              id: body.sale.id,
+              terminal: body.sale.terminal,
+            }
+          });
+        }
+        orderBilling.sync(body.billing);
+        orderTotalizer.sync(body.totalizer);
+        orderItemController.sync(body.items);
+        resolve({
+          code: body.order.id,
+          id: 200,
+          Message: "SYNCHED"
+        });
+      } catch (error) {
+        reject("OrderSaleController.sync:" + error);
+      }
+    });
+    return promise;
+  }
+
+  static async getById(id, tb_institution_id, terminal) {
+    const promise = new Promise((resolve, reject) => {
+      try {
+        Tb.sequelize.query(
+          'Select * ' +
+          'from tb_order_sale ' +
+          'where ( id =?) ' +
+          ' and ( terminal= ?) ' +
+          ' and (tb_institution_id =?) ',
+          {
+            replacements: [id, terminal, tb_institution_id],
+            type: Tb.sequelize.QueryTypes.SELECT
+          }).then(data => {
+            if (data.length > 0)
+              resolve(data[0])
+            else
+              resolve({ id: 0 });
+          })
+      } catch (error) {
+        reject('OrderSaleController.getById: ' + err);
+      }
+    });
+    return promise;
+  };
+
   static async insertOrder(body) {
     const promise = new Promise(async (resolve, reject) => {
 
-      if (body.Order.number == 0)
-        body.Order.number = await this.getNextNumber(body.Order.tb_institution_id);
+      if (body.sale.number == 0)
+        body.sale.number = await this.getNextNumber(body.order.tb_institution_id);
 
       const dataOrder = {
-        id: body.Order.id,
-        tb_institution_id: body.Order.tb_institution_id,
+        id: body.order.id,
+        tb_institution_id: body.order.tb_institution_id,
         terminal: 0,
-        tb_salesman_id: body.Order.tb_salesman_id,
-        number: body.Order.number,
-        tb_customer_id: body.Order.tb_customer_id,
-        total_value: body.Order.total_value,
-        change_value: body.Order.change_value,
+        tb_salesman_id: body.sale.tb_salesman_id,
+        number: body.sale.number,
+        tb_customer_id: body.sale.tb_customer_id,
+        total_value: body.sale.total_value,
+        change_value: body.sale.change_value,
       }
       Tb.create(dataOrder)
-        .then((data) => {
+        .then(() => {
           resolve(body);
         })
         .catch(err => {
@@ -59,66 +125,148 @@ class OrderSaleController extends Base {
     return promise;
   }
 
-
-
-  static async insert(body) {
-    const promise = new Promise(async (resolve, reject) => {
-      const dataOrder = {
-        id: 0,
-        tb_institution_id: body.Order.tb_institution_id,
-        terminal: 0,
-        tb_user_id: body.Order.tb_user_id,
-        dt_record: body.Order.dt_record,
-        note: body.Order.note
-      }
-      order.insert(dataOrder)
-        .then(async (data) => {
-          body.Order.id = data.id;
-          this.insertOrder(body)
-            .then(() => {
-              this.updateOrderItem(body)
-                .then(() => {
-                  resolve(body);
-                })
-            })
-            .catch(err => {
-              reject("orderSale.insert:" + err);
-            });
+  static async updateOrder(body) {
+    const promise = new Promise((resolve, reject) => {
+      try {
+        const dataSale = {
+          id: body.order.id,
+          tb_institution_id: body.order.tb_institution_id,
+          terminal: 0,
+          tb_salesman_id: body.sale.tb_salesman_id,
+          number: body.sale.number,
+          tb_customer_id: body.sale.tb_customer_id,
+          total_value: body.sale.total_value,
+          change_value: body.sale.change_value,
+        }
+        Tb.update(dataSale, {
+          where: {
+            id: dataSale.id,
+            tb_institution_id: dataSale.tb_institution_id,
+            terminal: dataSale.terminal
+          }
         })
+          .then(data => {
+            resolve(data);
+          })
+      } catch (error) {
+        reject("orderSale.updateOrderSale:" + error);
+      }
     });
     return promise;
   }
 
-  static getList(tb_institution_id) {
+  static async insert(body) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        orderController.insert(body.order)
+          .then(async (data) => {
+            body.order.id = data.id;
+            this.insertOrder(body)
+              .then(() => {
+                this.updateOrderItem(body)
+                  .then(async () => {
+                    await orderBilling.insert(body);
+                    await orderTotalizer.insert(body);
+                    resolve(body);
+                  })
+              });
+          })
+      } catch (error) {
+        reject("orderSale.insert:" + error);
+      }
+    });
+    return promise;
+  }
+
+  static async update(body) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        await orderController.update(body.order)
+        await this.updateOrder(body)
+        await this.updateOrderItem(body)
+        await orderBilling.update(body);
+        await orderTotalizer.update(body);
+        resolve(body);
+      } catch (error) {
+        reject("orderSale.update:" + error);
+      }
+    });
+    return promise;
+  }
+
+
+  static getList(tb_institution_id, tb_salesman_id) {
     const promise = new Promise((resolve, reject) => {
-      Tb.sequelize.query(
-        '  select ' +
-        '  ord.id, ' +
-        '  ord.tb_institution_id, ' +
-        '  ord.tb_user_id, ' +
-        '  ors.tb_customer_id,' +
-        '  etd.name_company name_entity,' +
-        '  ord.dt_record, ' +
-        '  ors.number, ' +
-        '  ord.status, ' +
-        ' CAST(ord.note AS CHAR(1000) CHARACTER SET utf8) note ' +
-        'from tb_order ord  ' +
-        '   inner join tb_order_sale ors ' +
-        '   on (ors.id = ord.id)  ' +
-        '     and (ors.tb_institution_id = ord.tb_institution_id) ' +
-        '     and (ors.terminal = ord.terminal) ' +
-        '   inner join tb_entity etd ' +
-        '   on (etd.id = ors.tb_customer_id)  ' +
-        'where (ord.tb_institution_id =? ) ',
-        {
-          replacements: [tb_institution_id],
-          type: Tb.sequelize.QueryTypes.SELECT
-        }).then(data => {
-          resolve(data);
-        })
-        .catch(err => {
-          reject("orderstockadjust.getlist: " + err);
-        });
+      try {
+
+        Tb.sequelize.query(
+          'select ' +
+          'ord.id , ' +
+          'ord.tb_institution_id , ' +
+          'ors.number, ' +
+          'ord.dt_record , ' +
+          'ors.tb_customer_id , ' +
+          'ctm.nick_trade name_customer , ' +
+          'pctm.cpf doc_customer , ' +
+          'ors.tb_salesman_id , ' +
+          'slm.nick_trade name_salesman , ' +
+          'pslm.cpf doc_salesman,  ' +
+          'ord.status ' +
+          'from tb_order ord   ' +
+          '   inner join tb_order_sale ors  ' +
+          '   on (ors.id = ord.id)   ' +
+          '     and (ors.tb_institution_id = ord.tb_institution_id)  ' +
+          '     and (ors.terminal = ord.terminal)  ' +
+          '   inner join tb_entity ctm  ' +
+          '   on (ctm.id = ors.tb_customer_id)  ' +
+          '   inner join tb_person pctm ' +
+          '   on (pctm.id  = ctm.id)  ' +
+          '   inner join tb_entity slm  ' +
+          '   on (slm.id = ors.tb_salesman_id)  ' +
+          '   inner join tb_person pslm ' +
+          '   on (pslm.id  = slm.id)     ' +
+          'where (ord.tb_institution_id =? )  ' +
+          'and (ors.tb_salesman_id = ?) ' +
+          ' AND (ord.status <> ?) '+
+          'union ' +
+          'select  ' +
+          'ord.id , ' +
+          'ord.tb_institution_id , ' +
+          'ors.number, ' +
+          'ord.dt_record , ' +
+          'ors.tb_customer_id , ' +
+          'ctm.nick_trade name_customer , ' +
+          'cctm.cnpj doc_customer , ' +
+          'ors.tb_salesman_id , ' +
+          'slm.nick_trade name_salesman , ' +
+          'pslm.cpf doc_salesman,  ' +
+          'ord.status ' +
+          'from tb_order ord   ' +
+          '   inner join tb_order_sale ors  ' +
+          '   on (ors.id = ord.id)   ' +
+          '     and (ors.tb_institution_id = ord.tb_institution_id)  ' +
+          '     and (ors.terminal = ord.terminal)  ' +
+          '   inner join tb_entity ctm  ' +
+          '   on (ctm.id = ors.tb_customer_id)  ' +
+          '   inner join tb_company cctm ' +
+          '   on (cctm.id  = ctm.id)     ' +
+          '   inner join tb_entity slm  ' +
+          '   on (slm.id = ors.tb_salesman_id)  ' +
+          '   inner join tb_person pslm ' +
+          '   on (pslm.id  = slm.id)     ' +
+          'where (ord.tb_institution_id =? )  ' +
+          'and (ors.tb_salesman_id = ?) ' +
+          ' AND (ord.status <> ?) '+          
+          ' order by number DESC ',
+          {
+            replacements: [tb_institution_id, tb_salesman_id,'D', tb_institution_id, tb_salesman_id,'D'],
+            type: Tb.sequelize.QueryTypes.SELECT
+          }).then(data => {
+            resolve(data);
+          })
+      } catch (error) {
+        reject("orderSale.getlist: " + error);
+      }
     });
     return promise;
   }
@@ -187,42 +335,78 @@ class OrderSaleController extends Base {
   }
   static getOrder(tb_institution_id, id) {
     const promise = new Promise((resolve, reject) => {
-      Tb.sequelize.query(
-        '  select ' +
-        '  ord.id, ' +
-        '  ord.tb_institution_id, ' +
-        '  ord.tb_user_id, ' +
-        '  ors.tb_customer_id,' +
-        '  cus.name_company name_customer,' +
-        '  tb_salesman_id, ' +
-        '  ven.name_company name_salesman, ' +
-        '  ord.dt_record, ' +
-        '  ors.number, ' +
-        '  ord.status, ' +
-        ' CAST(ord.note AS CHAR(1000) CHARACTER SET utf8) note ' +
-        'from tb_order ord  ' +
-        '   inner join tb_order_sale ors ' +
-        '   on (ors.id = ord.id)  ' +
-        '     and (ors.tb_institution_id = ord.tb_institution_id) ' +
-        '     and (ors.terminal = ord.terminal) ' +
-        '   inner join tb_entity cus ' +
-        '   on (cus.id = ors.tb_customer_id)  ' +
-        '   inner join tb_entity ven ' +
-        '   on (ven.id = ors.tb_salesman_id)  ' +
-        'where (ord.tb_institution_id =? ) ' +
-        ' and (ord.id =? )',
-        {
-          replacements: [tb_institution_id, id],
-          type: Tb.sequelize.QueryTypes.SELECT
-        }).then(data => {
-          resolve(data[0]);
-        })
-        .catch(err => {
-          reject('orderstockadjust.get: ' + err);
-        });
+      var sqlTxtPerson =
+        'select ' +
+        ' ors.number, ' +
+        ' ors.tb_customer_id, ' +
+        ' ctm.nick_trade name_customer, ' +
+        ' pctm.cpf docCustomer, ' +
+        ' ors.tb_salesman_id, ' +
+        ' slm.nick_trade name_salesman, ' +
+        ' pslm.cpf docSalesman ' +
+        'from tb_order_sale ors  ' +
+        '   inner join tb_entity ctm ' +
+        '   on (ctm.id = ors.tb_customer_id)  ' +
+        '   inner join tb_person pctm ' +
+        '   on (pctm.id = ors.tb_customer_id)  ' +
+
+        '   inner join tb_entity slm ' +
+        '   on (slm.id = ors.tb_salesman_id)  ' +
+
+        '   inner join tb_person pslm ' +
+        '   on (pslm.id = ors.tb_salesman_id)  ' +
+
+
+        'where (ors.tb_institution_id =? ) ' +
+        ' and (ors.id =? )';
+
+      var sqlTxtCompany =
+        'select ' +
+        ' ors.number, ' +
+        ' ors.tb_customer_id, ' +
+        ' ctm.nick_trade name_customer, ' +
+        ' cctm.cnpj doc_customer, ' +
+        ' ors.tb_salesman_id, ' +
+        ' slm.nick_trade name_salesman, ' +
+        ' pslm.cpf doc_salesman ' +
+        'from tb_order_sale ors  ' +
+        '   inner join tb_entity ctm ' +
+        '   on (ctm.id = ors.tb_customer_id)  ' +
+
+        '   inner join tb_company cctm ' +
+        '   on (cctm.id = ors.tb_customer_id)  ' +
+
+        '   inner join tb_entity slm ' +
+        '   on (slm.id = ors.tb_salesman_id)  ' +
+
+        '   inner join tb_person pslm ' +
+        '   on (pslm.id = ors.tb_salesman_id)  ' +
+        'where (ors.tb_institution_id =? ) ' +
+        ' and (ors.id =? )';
+
+      try {
+        Tb.sequelize.query(
+          sqlTxtPerson +
+          ' union ' +
+          sqlTxtCompany,
+          {
+            replacements: [tb_institution_id, id, tb_institution_id, id],
+            type: Tb.sequelize.QueryTypes.SELECT
+          }).then(data => {
+
+            if (data.length > 0) {
+              resolve(data[0]);
+            } else {
+              resolve("{}");
+            }
+          })
+      } catch (error) {
+        reject('orderSaleController.getOrder: ' + error);
+      }
     });
     return promise;
   }
+
 
   static async getStatus(tb_institution_id, id) {
     const promise = new Promise((resolve, reject) => {
@@ -245,7 +429,7 @@ class OrderSaleController extends Base {
           resolve(data[0].status);
         })
         .catch(err => {
-          reject('orderstockadjust.getStatus: ' + err);
+          reject('orderSale.getStatus: ' + err);
         });
     });
     return promise;
@@ -255,10 +439,21 @@ class OrderSaleController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var result = {};
-        const dataOrder = await this.getOrder(tb_institution_id, tb_order_id);
-        result.Order = dataOrder;
-        const dataItems = await orderItem.getList(tb_institution_id, tb_order_id);
-        result.Items = dataItems;
+
+        const dataOrder = await orderController.get(tb_institution_id, tb_order_id);
+        result.order = dataOrder;
+
+        const dataSale = await this.getOrder(tb_institution_id, tb_order_id);
+        result.sale = dataSale;
+
+        const dataBilling = await orderBilling.get(tb_institution_id, tb_order_id);
+        result.billing = dataBilling;
+
+        const dataTotalizer = await orderTotalizer.get(tb_institution_id, tb_order_id);
+        result.totalizer = dataTotalizer;
+
+        const dataItems = await orderItemController.getList(tb_institution_id, tb_order_id);
+        result.items = dataItems;
 
         resolve(result);
       }
@@ -269,67 +464,42 @@ class OrderSaleController extends Base {
     return promise;
   }
 
-  static async updateOrder(body) {
-    const promise = new Promise(async (resolve, reject) => {
-      const dataOrderStockAdjust = {
-        id: body.Order.id,
-        tb_institution_id: body.Order.tb_institution_id,
-        terminal: 0,
-        tb_user_id: body.Order.tb_user_id,
-        dt_record: body.Order.dt_record,
-        note: body.Order.note
-      }
-      Tb.update(dataOrderStockAdjust, {
-        where: {
-          id: dataOrderStockAdjust.id,
-          tb_institution_id: dataOrderStockAdjust.tb_institution_id,
-          terminal: dataOrderStockAdjust.terminal
-        }
 
-      })
-        .then(() => {
-          resolve(dataOrderStockAdjust);
-        })
-        .catch(err => {
-          reject("orderSale.updateOrder:" + err);
-        });
-    });
-    return promise;
-  }
 
   static async updateOrderItem(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var dataItem = {};
-        var resultItem = {};
-        for (var item of body.Items) {
+        for (var item of body.items) {
           if (item.updateStatus != "") {
             dataItem = {
               id: item.id,
-              tb_institution_id: body.Order.tb_institution_id,
-              tb_order_id: body.Order.id,
-              terminal: 0,
+              tb_institution_id: body.order.tb_institution_id,
+              tb_order_id: body.order.id,
+              terminal: body.order.terminal,
               tb_stock_list_id: item.tb_stock_list_id,
               tb_price_list_id: item.tb_price_list_id,
               tb_product_id: item.tb_product_id,
               quantity: item.quantity,
               unit_value: item.unit_value,
+              kind: 'Sale',
             };
-            //Quanto o insert é mais complexo como getNext precisa do await no loop              
+            //Quanto o insert é mais complexo como getNext precisa do no loop              
             switch (item.update_status) {
               case "I":
-                await orderItem.insert(dataItem)
+                await orderItemController.insert(dataItem)
                   .then(data => {
                     item.id = data.id;
                   });
                 break;
               case "E":
-                await orderItem.update(dataItem);
+                await orderItemController.update(dataItem);
                 break;
               case "D":
-                await orderItem.delete(dataItem);
+                await orderItemController.delete(dataItem);
                 break;
             }
+            item.update_status = "";
           }
         };
         resolve("Items Alterados");
@@ -346,12 +516,12 @@ class OrderSaleController extends Base {
       try {
         var dataItem = {};
         var resultItem = {};
-        for (var item of body.Items) {
+        for (var item of body.items) {
           if (item.updateStatus != "") {
             dataItem = {
               id: item.id,
-              tb_institution_id: body.Order.tb_institution_id,
-              tb_order_id: body.Order.id,
+              tb_institution_id: body.order.tb_institution_id,
+              tb_order_id: body.order.id,
               terminal: 0,
               tb_stock_list_id: item.tb_stock_list_id,
               tb_price_list_id: item.tb_price_list_id,
@@ -359,13 +529,13 @@ class OrderSaleController extends Base {
               quantity: item.quantity,
               unit_value: item.unit_value,
             };
-            //Quanto o insert é mais complexo como getNext precisa do await no loop  
+            //Quanto o insert é mais complexo como getNext precisa do no loop  
             if (item.updateStatus == "I") {
-              await orderItem.insert(dataItem);
+              orderItem.insert(dataItem);
             } else if (item.updateStatus == "U") {
-              await orderItem.update(dataItem);
+              orderItem.update(dataItem);
             } else if (item.updateStatus == "D") {
-              await orderItem.delete(dataItem);
+              orderItem.delete(dataItem);
             }
           }
         };
@@ -378,49 +548,16 @@ class OrderSaleController extends Base {
     return promise;
   }
 
-  static async update(body) {
+  static async delete(tb_institution_id,id) {
     const promise = new Promise((resolve, reject) => {
-      const dataOrder = {
-        id: body.Order.id,
-        tb_institution_id: body.Order.tb_institution_id,
-        terminal: 0,
-        tb_user_id: body.Order.tb_user_id,
-        dt_record: body.Order.dt_record,
-        note: body.Order.note
+      try {
+        orderController.delete(tb_institution_id,id)
+          .then(() => {
+            resolve(true);
+          })
+      } catch (error) {
+        reject("orderSale.deleteOrderSale:" + error);
       }
-      order.update(dataOrder)
-        .then(() => {
-          this.updateOrder(body)
-            .then(() => {
-              this.updateOrderItem(body)
-                .then(() => {
-                  resolve(body);
-                })
-            })
-          resolve(body);
-        })
-        .catch(err => {
-          reject("orderSale.update:" + err);
-        });
-    });
-    return promise;
-  }
-
-  static async delete(order) {
-    const promise = new Promise((resolve, reject) => {
-      Tb.destroy({
-        where: {
-          id: order.id,
-          tb_institution_id: order.tb_institution_id,
-          terminal: order.terminal,
-        }
-      })
-        .then((data) => {
-          resolve(data);
-        })
-        .catch(err => {
-          reject("OrderSale.delete:" + err);
-        });
     });
     return promise;
   }
@@ -428,9 +565,9 @@ class OrderSaleController extends Base {
   static async closure(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        var status = await this.getStatus(body.tb_institution_id, body.id);
+        var status = this.getStatus(body.tb_institution_id, body.id);
         if (status == 'A') {
-          var items = await orderItem.getList(body.tb_institution_id, body.id);
+          var items = orderItem.getList(body.tb_institution_id, body.id);
           var dataItem = {};
           for (var item of items) {
             dataItem = {
@@ -448,10 +585,10 @@ class OrderSaleController extends Base {
               quantity: item.quantity,
               operation: "Ajuste"
             };
-            //Quanto o insert é mais complexo como create precisa do await no loop          
-            await stockStatement.insert(dataItem);
+            //Quanto o insert é mais complexo como create precisa do no loop          
+            stockStatement.insert(dataItem);
           };
-          await order.updateStatus(body.tb_institution_id, body.id, 'F');
+          order.updateStatus(body.tb_institution_id, body.id, 'F');
           resolve("200");
         } else {
           resolve("201");
@@ -466,9 +603,9 @@ class OrderSaleController extends Base {
   static async reopen(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        var status = await this.getStatus(body.tb_institution_id, body.id);
+        var status = this.getStatus(body.tb_institution_id, body.id);
         if (status == 'F') {
-          var items = await orderItem.getList(body.tb_institution_id, body.id);
+          var items = orderItem.getList(body.tb_institution_id, body.id);
           var dataItem = {};
           for (var item of items) {
             dataItem = {
@@ -486,10 +623,10 @@ class OrderSaleController extends Base {
               quantity: item.quantity,
               operation: "Ajuste"
             };
-            //Quanto o insert é mais complexo como create precisa do await no loop          
-            await stockStatement.insert(dataItem);
+            //Quanto o insert é mais complexo como create precisa do no loop          
+            stockStatement.insert(dataItem);
           };
-          await order.updateStatus(body.tb_institution_id, body.id, 'A');
+          order.updateStatus(body.tb_institution_id, body.id, 'A');
           resolve("200");
         } else {
           resolve("201");
@@ -507,9 +644,9 @@ class OrderSaleController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         //Não salva tb_order por que já foi criado no attendance   
-        await this.insertCard(body);
-        await this.insertOrderPaid(body);
-        resolve(body.Order);
+        this.insertCard(body);
+        this.insertOrderPaid(body);
+        resolve(body.order);
       } catch (err) {
         reject('OrderSaleController.saveCard: ' + err);
       }
@@ -521,18 +658,18 @@ class OrderSaleController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var dataItem = {};
-        for (var item of body.Items) {
+        for (var item of body.items) {
           dataItem = {
-            id: body.Order.id,
-            tb_institution_id: body.Order.tb_institution_id,
+            id: body.order.id,
+            tb_institution_id: body.order.tb_institution_id,
             terminal: 0,
             tb_product_id: item.tb_product_id,
             bonus: item.bonus,
             sale: item.sale,
             unit_value: item.unit_value,
           };
-          //Quanto o insert é mais complexo como getNext precisa do await no loop          
-          await orderSaleCard.insert(dataItem);
+          //Quanto o insert é mais complexo como getNext precisa do no loop          
+          orderSaleCard.insert(dataItem);
         };
         resolve("Items Adicionados");
       } catch (err) {
@@ -550,15 +687,15 @@ class OrderSaleController extends Base {
         for (var item of body.Payments) {
           if (item.dt_expiration == "") delete item.dt_expiration;
           dataPayment = {
-            id: body.Order.id,
-            tb_institution_id: body.Order.tb_institution_id,
+            id: body.order.id,
+            tb_institution_id: body.order.tb_institution_id,
             terminal: 0,
             tb_payment_type_id: item.tb_payment_type_id,
             value: item.value,
             dt_expiration: item.dt_expiration,
           };
-          //Quanto o insert é mais complexo como getNext precisa do await no loop          
-          await orderPaid.insert(dataPayment);
+          //Quanto o insert é mais complexo como getNext precisa do no loop          
+          orderPaid.insert(dataPayment);
         };
         resolve("Pagamentos Adicionados");
       } catch (err) {
@@ -573,14 +710,14 @@ class OrderSaleController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var qtde = 0;
-        for (var item of body.Items) {
+        for (var item of body.items) {
           qtde += item.qtty_sold;
         }
         if (qtde > 0) {
-          body.Order['number'] = 0;
-          await this.insertOrder(body);
-          await this.insertOrderItemByCard(body);
-          await this.closurebyCard(body);
+          body.order['number'] = 0;
+          this.insertOrder(body);
+          this.insertOrderItemByCard(body);
+          this.closurebyCard(body);
         }
         resolve(body);
       } catch (err) {
@@ -594,12 +731,12 @@ class OrderSaleController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var dataItem = {};
-        for (var item of body.Items) {
+        for (var item of body.items) {
           if (item.qtty_sold > 0) {
             dataItem = {
               id: 0,
-              tb_institution_id: body.Order.tb_institution_id,
-              tb_order_id: body.Order.id,
+              tb_institution_id: body.order.tb_institution_id,
+              tb_order_id: body.order.id,
               terminal: 0,
               tb_stock_list_id: body.StockOrigen.tb_stock_list_id,//Neste caso via card na consignação deve informar o estoque do cliente 
               tb_product_id: item.tb_product_id,
@@ -607,8 +744,8 @@ class OrderSaleController extends Base {
               unit_value: item.unit_value,
               kind: 'Sale',
             };
-            //Quanto o insert é mais complexo como getNext precisa do await no loop          
-            await orderItem.insert(dataItem);
+            //Quanto o insert é mais complexo como getNext precisa do no loop          
+            orderItem.insert(dataItem);
           }
         };
         resolve("Items Adicionados");
@@ -623,7 +760,7 @@ class OrderSaleController extends Base {
   static async closurebyCard(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        var items = await this.getItemList(body.Order.tb_institution_id, body.Order.id);
+        var items = this.getItemList(body.order.tb_institution_id, body.order.id);
         var dataItem = {};
         for (var item of items) {
           dataItem = {
@@ -635,16 +772,16 @@ class OrderSaleController extends Base {
             tb_stock_list_id: item.tb_stock_list_id,
             local: "web",
             kind: "Fechamento",
-            dt_record: body.Order.dt_record,
+            dt_record: body.order.dt_record,
             direction: "S",
             tb_merchandise_id: item.tb_product_id,
             quantity: item.quantity,
             operation: "Sale"
           };
-          await stockStatement.insert(dataItem);
+          stockStatement.insert(dataItem);
 
         };
-        await order.updateStatus(body.Order.tb_institution_id, body.Order.id, 'F');
+        order.updateStatus(body.order.tb_institution_id, body.order.id, 'F');
         resolve("200");
       } catch (err) {
         reject(err);
@@ -661,7 +798,7 @@ class OrderSaleController extends Base {
           id: id,
           terminal: 0,
         }
-        await this.delete(order);
+        this.delete(order);
         resolve("clenUp executado com sucesso!");
       } catch (error) {
         reject('orderSale.cleanUp ' + error);

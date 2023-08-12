@@ -419,21 +419,21 @@ class FinancialStatementController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var dataFinancial = {
-          tb_institution_id: body.Order.tb_institution_id,
-          tb_order_id: body.Order.id,
+          tb_institution_id: body.order.tb_institution_id,
+          tb_order_id: body.order.id,
           terminal: 0,
           tb_bank_account_id: 0,
           dt_record: DateFunction.newDate(),
           tb_bank_historic_id: 0,
           credit_value: 0,
           debit_value: 0,
-          manual_history: ["Pedido:", body.Order.number, "Cliente:", body.Order.name_customer].join(' '),
+          manual_history: ["Pedido:", body.order.number, "Cliente:", body.order.name_customer].join(' '),
           kind: "C",
           settled_code: 0,
-          tb_user_id: body.Order.tb_salesman_id,
+          tb_user_id: body.order.tb_salesman_id,
           future: "N",
           dt_original: DateFunction.newDate(),
-          doc_reference: body.Order.number,
+          doc_reference: body.order.number,
           conferred: "N",
           tb_payment_types_id: 0,
           tb_financial_plans_id_cre: 0,
@@ -442,8 +442,8 @@ class FinancialStatementController extends Base {
         for (var item of body.Payments) {
           if (item.value > 0) {
             dataFinancial.tb_payment_types_id = item.tb_payment_type_id;
-            if ((item.name_payment_type = 'DINHEIRO') && (body.Order.change_value > 0)) {
-              dataFinancial.credit_value = item.value - body.Order.change_value;
+            if ((item.name_payment_type = 'DINHEIRO') && (body.order.change_value > 0)) {
+              dataFinancial.credit_value = item.value - body.order.change_value;
             } else {
               dataFinancial.credit_value = item.value;
             }

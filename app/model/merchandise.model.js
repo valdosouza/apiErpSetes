@@ -130,7 +130,7 @@ module.exports = sequelize => {
       field: "exclusive_dealer"
     },
     application: {
-      type: blob,
+      type: DataTypes.STRING(500),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,

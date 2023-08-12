@@ -1,118 +1,83 @@
-const OrderBonusController = require('../controller/orderBonus.controller.js');
 const OrderSaleController = require("../controller/orderSale.controller.js");
-const OrderSaleCardController = require("../controller/orderSaleCard.controller.js");
-const entityHasStockList = require("../controller/entityHasStockList.controller.js");
-const FinancialController = require('../controller/financial.controller.js');
-const OrderAttendaceController = require('../controller/orderAttendance.controller.js');
-const FinancialPaymentController = require('../controller/financialPayment.controller.js');
-const FinancialStatementController = require('../controller/financialStatement.controller.js');
 
 class OrderSaleEndPoint {
 
+  static sync = (req, res) => {
+    try {
+      OrderSaleController.sync(req.body)
+        .then(data => {
+          res.send({
+            code: data.id,
+            id: 200,
+            Message: "SAVED"
+          })
+        })
+    } catch (error) {
+      res.send({
+        code: 0,
+        id: 500,
+        Message: error
+      })
+    }
+  }
+
   static create = (req, res) => {
     OrderSaleController.insert(req.body)
-      .then(data => {
-        res.send(data);
-      })
-  }
-
-  static saveByCard = (req, res) => {
-    
-    OrderSaleController.saveCard(req.body)
-      .then(async data => {
-        
-        //Retorna do estoque do vendedor - Venda direta pelo estoque do vendedor ....lembrar da venda direta pelo estoque do cliente
-        var stockSalesman = await entityHasStockList.getByEntity(req.body.Order.tb_institution_id,req.body.Order.tb_salesman_id);    
-        //Usar o grupo estoque manager por que pode ser usado tanto salesman quanto o customer    
-        req.body['StockOrigen'] = stockSalesman[0];          
-
-        await OrderBonusController.saveByCard(req.body);
-
-        await OrderSaleController.saveByCard(req.body);
-
-        await FinancialController.saveByCard(req.body);
-        
-        //cliente definiu que tudo será condiderado como recebido
-        //await FinancialPaymentController.saveByCard(req.body);
-      
-        //cliente definiu que tudo será condiderado como recebido
-        //await FinancialStatementController.saveByCard(req.body);
-
-        await OrderAttendaceController.finished(req.body);
-        res.send(data);
-      })
-  }
-
-  static getList(req, res) {
-
-    OrderSaleController.getList(req.params.tb_institution_id)
-      .then(data => {
-        res.send(data);
-      })
-  }
-
-  static getNewOrderSaleCard(req, res) {
-
-    OrderSaleCardController.getNewOrderSaleCard(req.params.tb_institution_id, req.params.tb_price_list_id)
-      .then(data => {
-        res.send(data);
-      })
-  }
-
-  static get(req, res) {
-
-    OrderSaleController.get(req.params.tb_institution_id,
-      req.params.tb_order_id)
-      .then(data => {
-        res.send(data);
+      .then(data => {        
+       var dataResult = {
+          id : data.order.id,
+          number: data.sale.number,
+          dt_record : data.order.dt_record,
+          tb_customer_id : data.sale.tb_customer_id,
+          name_customer: data.sale.name_customer,
+          doc_customer:  data.sale.doc_customer,
+          tb_salesman_id: data.sale.tb_salesman_id,
+          name_salesman: data.sale.name_salesman,
+          doc_salesman : data.doc_salesman,
+          status: data.order.status,
+        }
+        res.send(dataResult);
       })
   }
 
   static update = (req, res) => {
-
     OrderSaleController.update(req.body)
-      .then(data => {
-        if (data)
-          res.send(req.body)
-        else
-          res.send(data);
+      .then(data => {        
+       var dataResult = {
+          id : data.order.id,
+          number: data.sale.number,
+          dt_record : data.order.dt_record,
+          tb_customer_id : data.sale.tb_customer_id,
+          name_customer: data.sale.name_customer,
+          doc_customer:  data.sale.doc_customer,
+          tb_salesman_id: data.sale.tb_salesman_id,
+          name_salesman: data.sale.name_salesman,
+          doc_salesman : data.doc_salesman,
+          status: data.order.status,
+        }
+        res.send(dataResult);
       })
-  }
-
-  static delete(req, res) {
-
-    OrderSaleController.delete(req.body)
+  }  
+  static getList = (req, res) => {
+    
+    OrderSaleController.getList(req.params.tb_institution_id,req.params.tb_salesman_id)
       .then(data => {
         res.send(data);
       })
   }
 
-  static closure(req, res) {
-
-    OrderSaleController.closure(req.body)
+  static get = (req, res) => {    
+    OrderSaleController.get(req.params.tb_institution_id,req.params.tb_order_id)
       .then(data => {
-        if (data == 200) {
-          res.status(200).send('The OrderSale was closed');
-        } else {
-          if (data == 201) {
-            res.status(201).send('The OrderSale is already closed');
-          }
-        }
+        res.send(data);
       })
   }
 
-  static reopen(req, res) {
-
-    OrderSaleController.reopen(req.body)
-      .then(data => {
-        if (data == 200) {
-          res.status(200).send('The OrderSale was open');
-        } else {
-          if (data == 201) {
-            res.status(201).send('The OrderSale is already open');
-          }
-        }
+  static delete = (req, res) => {        
+    OrderSaleController.delete(req.body.tb_institution_id,req.body.id)
+      .then(data => {             
+          res.send({result: data});
       })
-  }
+  }  
 }
 module.exports = OrderSaleEndPoint; 

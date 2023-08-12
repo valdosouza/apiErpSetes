@@ -22,14 +22,14 @@ module.exports = sequelize => {
       comment: null,
       field: "description"
     },
-    tb_provider_id: {
-      type: DataTypes.INTEGER(11),
+    abbreviation: {
+      type: DataTypes.STRING(3),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
       comment: null,
-      field: "tb_provider_id"
+      field: "abbreviation"
     },
     created_at: {
       type: DataTypes.DATE,
@@ -51,7 +51,7 @@ module.exports = sequelize => {
     }
   };
   const options = {
-    tableName: "tb_brand",
+    tableName: "tb_package",
     comment: "",
     indexes: [{
       name: "updated_at",
@@ -60,6 +60,6 @@ module.exports = sequelize => {
       fields: ["updated_at"]
     }]
   };
-  const BrandModel = sequelize.define("tb_brand_model", attributes, options);
-  return BrandModel;
+  const PackageModel = sequelize.define("tb_package_model", attributes, options);
+  return PackageModel;
 };

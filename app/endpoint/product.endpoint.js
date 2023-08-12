@@ -39,6 +39,13 @@ class ProductEndPoint {
       })
   }
 
+  static getPriceByProduct(req, res) {
+    ProdcutController.getPriceByProduct(req.params.tb_institution_id, req.params.tb_product_id)
+      .then(data => {
+        res.send(data);
+      })    
+  }
+
   static update = (req, res) => {
     ProdcutController.update(req.body)
       .then(data => {

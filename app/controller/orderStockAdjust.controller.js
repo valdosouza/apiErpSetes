@@ -1,9 +1,12 @@
 const Base = require('./base.controller.js');
 const db = require("../model");
 const Tb = db.orderstockadjust;
-const order = require('./order.controller.js');
-const orderItem = require('./orderItemStockAdjust.controller.js');
 const stockStatement = require('./stockStatement.controller.js');
+const orderController = require('./order.controller.js');
+const orderTotalizer = require('./orderTotalizer.controller.js');
+const orderItemController = require('./orderItem.controller.js');
+const fiscalController = require('./fiscal.controller.js');
+
 
 class OrderStockAdjustController extends Base {
   static async getNextNumber(tb_institution_id) {
@@ -30,19 +33,84 @@ class OrderStockAdjustController extends Base {
     return promise;
   }
 
+  static async sync(body) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        var regUser = await fiscalController.getByDocNumber(body.order.doc_user);
+        if (regUser.id > 0)
+          body.order.tb_user_id = regUser.id
+        else  
+          body.order.tb_user_id = body.orderStockAdjust.tb_institution_id;
+        
+        var regEntity = await fiscalController.getByDocNumber(body.orderStockAdjust.doc_entity);
+        body.orderStockAdjust.tb_entity_id = regEntity.id;        
+        delete body.orderStockAdjust.doc_entity;
+        delete body.order.doc_user;
+        orderController.sync(body.order);       
+        var regOrderPurchase = await this.getById(body.orderStockAdjust.id, body.orderStockAdjust.tb_institution_id, body.orderStockAdjust.terminal) ;
+        if (regOrderPurchase.id == 0){                           
+          Tb.create(body.orderStockAdjust);
+        }else{
+          Tb.update(body.orderStockAdjust,{
+            where: {
+            tb_institution_id: body.orderStockAdjust.tb_institution_id,
+            id: body.orderStockAdjust.id,
+            terminal: body.orderStockAdjust.terminal,
+            }
+          });
+        }        
+        orderTotalizer.sync(body.totalizer);
+        orderItemController.sync(body.items);
+        resolve({
+          code: body.order.id,
+          id: 200,
+          Message: "SYNCHED"
+        });
+      } catch (error) {
+        reject("OrderStockAdjustController.sync:" + error);
+      }
+    });
+    return promise;
+  }
+
+  static async getById(id, tb_institution_id,terminal) {
+    const promise = new Promise((resolve, reject) => {
+      try {
+        Tb.sequelize.query(
+          'Select * ' +
+          'from  tb_order_stock_adjust ' +
+          'where ( id =?) ' +
+          ' and ( terminal= ?) '+
+          ' and (tb_institution_id =?) ',
+          {
+            replacements: [id, terminal, tb_institution_id],
+            type: Tb.sequelize.QueryTypes.SELECT
+          }).then(data => {
+            if (data.length > 0)
+              resolve(data[0])
+            else
+              resolve({id:0});
+          })
+      } catch (error) {
+        reject('StockAdjust: ' + err);
+      }
+    });
+    return promise;
+  };
+
   static async insertOrder(body) {
     const promise = new Promise(async (resolve, reject) => {
 
-      if (body.Order.number == 0)
-        body.Order.number = await this.getNextNumber(body.Order.tb_institution_id);
+      if (body.order.number == 0)
+        body.order.number = await this.getNextNumber(body.order.tb_institution_id);
 
       const dataOrder = {
-        id: body.Order.id,
-        tb_institution_id: body.Order.tb_institution_id,
+        id: body.order.id,
+        tb_institution_id: body.order.tb_institution_id,
         terminal: 0,
-        number: body.Order.number,        
-        tb_entity_id: body.Order.tb_entity_id,
-        direction: body.Order.direction,
+        number: body.order.number,        
+        tb_entity_id: body.order.tb_entity_id,
+        direction: body.order.direction,
       }
       Tb.create(dataOrder)
         .then(() => {
@@ -58,21 +126,19 @@ class OrderStockAdjustController extends Base {
   static async insertOrderItem(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        console.log(body);
         var dataItem = {};
-        for (var item of body.Items) {
+        for (var item of body.items) {
           dataItem = {
             id: 0,
-            tb_institution_id: body.Order.tb_institution_id,
-            tb_order_id: body.Order.id,
+            tb_institution_id: body.order.tb_institution_id,
+            tb_order_id: body.order.id,
             terminal: 0,
-            tb_stock_list_id: body.Order.tb_stock_list_id,
+            tb_stock_list_id: body.order.tb_stock_list_id,
             tb_product_id: item.tb_product_id,
             quantity: item.quantity,
             unit_value: item.unit_value,
             kind: 'StockAdjustment',
           };
-          console.log(dataItem);
           //Quanto o insert é mais complexo como getNext precisa do await no loop          
           await orderItem.insert(dataItem);
         };
@@ -89,15 +155,15 @@ class OrderStockAdjustController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       const dataOrder = {
         id: 0,
-        tb_institution_id: body.Order.tb_institution_id,
+        tb_institution_id: body.order.tb_institution_id,
         terminal: 0,
-        tb_user_id: body.Order.tb_user_id,
-        dt_record: body.Order.dt_record,
-        note: body.Order.note
+        tb_user_id: body.order.tb_user_id,
+        dt_record: body.order.dt_record,
+        note: body.order.note
       }
       order.insert(dataOrder)
         .then(async (data) => {
-          body.Order.id = data.id;
+          body.order.id = data.id;
           this.insertOrder(body)
             .then(() => {
               this.insertOrderItem(body)
@@ -223,13 +289,13 @@ class OrderStockAdjustController extends Base {
       try {
         var result = {};
         const dataOrder = await this.getOrder(tb_institution_id, id);
-        result.Order = dataOrder;
+        result.order = dataOrder;
         const dataItems = await orderItem.getList(tb_institution_id, id);
         
         if (dataItems.length > 0){
-        result.Items = dataItems;
-        result.Order.tb_stock_list_id = dataItems[0].tb_stock_list_id;
-        result.Order.name_stock_list =  dataItems[0].name_stock_list;
+        result.items = dataItems;
+        result.order.tb_stock_list_id = dataItems[0].tb_stock_list_id;
+        result.order.name_stock_list =  dataItems[0].name_stock_list;
         }
         resolve(result);
       }
@@ -243,11 +309,11 @@ class OrderStockAdjustController extends Base {
   static async updateOrder(body) {
     const promise = new Promise(async (resolve, reject) => {
       const dataOrderStockAdjust = {
-        id: body.Order.id,
-        tb_institution_id: body.Order.tb_institution_id,
+        id: body.order.id,
+        tb_institution_id: body.order.tb_institution_id,
         terminal: 0,
-        tb_entity_id: body.Order.tb_entity_id,
-        direction : body.Order.direction,
+        tb_entity_id: body.order.tb_entity_id,
+        direction : body.order.direction,
       }
       Tb.update(dataOrderStockAdjust, {
         where: {
@@ -271,13 +337,13 @@ class OrderStockAdjustController extends Base {
       try {
 
         var dataItem = {};
-        for (var item of body.Items) {
+        for (var item of body.items) {
           dataItem = {
             id: item.id,
-            tb_institution_id: body.Order.tb_institution_id,
-            tb_order_id: body.Order.id,
+            tb_institution_id: body.order.tb_institution_id,
+            tb_order_id: body.order.id,
             terminal: 0,
-            tb_stock_list_id: body.Order.tb_stock_list_id,
+            tb_stock_list_id: body.order.tb_stock_list_id,
             tb_product_id: item.tb_product_id,
             quantity: item.quantity,
             kind : "StockAdjustment",
@@ -310,12 +376,12 @@ class OrderStockAdjustController extends Base {
   static async update(body) {
     const promise = new Promise((resolve, reject) => {
       const dataOrder = {
-        id: body.Order.id,
-        tb_institution_id: body.Order.tb_institution_id,
+        id: body.order.id,
+        tb_institution_id: body.order.tb_institution_id,
         terminal: 0,
-        tb_user_id: body.Order.tb_user_id,
-        dt_record: body.Order.dt_record,
-        note: body.Order.note
+        tb_user_id: body.order.tb_user_id,
+        dt_record: body.order.dt_record,
+        note: body.order.note
       }
       order.update(dataOrder)
         .then(() => {

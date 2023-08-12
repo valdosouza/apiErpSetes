@@ -5,43 +5,42 @@ const price = require('./price.controller.js');
 const priceList = require('./priceList.controller.js');
 
 class ProdcutController extends Base {
-  static async getNextId(tb_institution_id) {
-    const promise = new Promise((resolve, reject) => {
-      Tb.sequelize.query(
-        'Select max(id) lastId ' +
-        'from tb_product ' +
-        'WHERE ( tb_institution_id =? ) ',
-        {
-          replacements: [tb_institution_id],
-          type: Tb.sequelize.QueryTypes.SELECT
-        }).then(data => {
-          if (data) {
-            const NextId = data[0].lastId + 1;
-            resolve(NextId);
-          } else {
-            resolve(1);
-          }
-        })
-        .catch(err => {
-          reject('product.getNexId: ' + err);
+
+  static async sync(product) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        delete product.name_category;
+        var regProd = await this.getById(product.tb_institution_id, product.id);
+        if (regProd.id == 0) {
+          await Tb.create(product);
+        } else {
+          Tb.update(product, {
+            where: { id: product.id, tb_institution_id: product.tb_institution_id }
+          })
+        }
+        resolve({
+          code: product.id,
+          id: 200,
+          Message: "SYNCHED"
         });
+      } catch (error) {
+        reject("ProductController.sync:" + error);
+      }
     });
     return promise;
   }
 
   static async insert(product) {
     const promise = new Promise(async (resolve, reject) => {
-      const nextId = await this.getNextId(product.product.tb_institution_id);
-      product.product.id = nextId;
-      if (product.validity == '') delete product.product.validity;
+      const nextId = await this.getNextId(product.tb_institution_id);
+      product.id = nextId;
+      if (product.validity == '') delete product.validity;
       Tb.create(product.product)
         .then((data) => {
-
-
           var dataPrice = {};
           for (var item of product.pricelist) {
             dataPrice = {
-              tb_institution_id: product.product.tb_institution_id,
+              tb_institution_id: product.tb_institution_id,
               tb_price_list_id: item.id,
               tb_product_id: data.id,
               price_tag: item.price_tag
@@ -77,7 +76,7 @@ class ProdcutController extends Base {
         sqltxt += ' and (p.description <> ?) ';
       }
       sqltxt +=
-        ' order by description '+
+        ' order by description ' +
         ' limit ' + ((body.page - 1) * 20) + ',20 ';
 
       Tb.sequelize.query(
@@ -95,9 +94,7 @@ class ProdcutController extends Base {
     return promise;
   }
 
-
-
-  static async getById(tb_instituion_id, id) {
+  static async getById(tb_institution_id, id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         'select ' +
@@ -109,10 +106,14 @@ class ProdcutController extends Base {
         'where ( tb_institution_id =? ) ' +
         ' and ( id=? )',
         {
-          replacements: [tb_instituion_id, id],
+          replacements: [tb_institution_id, id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
-          resolve(data[0]);
+          if (data.length > 0) {
+            resolve(data[0]);
+          } else {
+            resolve({ id: 0 });
+          }
         })
         .catch(err => {
           reject('getById: ' + err);
@@ -137,10 +138,8 @@ class ProdcutController extends Base {
             active: "N"
           }
         }
-
         const dataPrice = await price.getList(tb_institution_id, id);
         result.pricelist = dataPrice;
-
         resolve(result);
       }
       catch (err) {
@@ -150,7 +149,7 @@ class ProdcutController extends Base {
     return promise;
   }
 
-  static async getPrice(tb_instituion_id, tb_price_list_id) {
+  static async getPrice(tb_institution_id, tb_price_list_id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         'select prd.id, prd.description name_product, prc.price_tag ' +
@@ -161,7 +160,7 @@ class ProdcutController extends Base {
         'where (prd.tb_institution_id =? )  ' +
         'and ( prc.tb_price_list_id =? ) ',
         {
-          replacements: [tb_instituion_id, tb_price_list_id],
+          replacements: [tb_institution_id, tb_price_list_id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           resolve(data);
@@ -169,6 +168,50 @@ class ProdcutController extends Base {
         .catch(err => {
           reject('getById: ' + err);
         });
+    });
+    return promise;
+  };
+
+  static async getPriceByProduct(tb_institution_id, tb_product_id) {
+    const promise = new Promise((resolve, reject) => {
+      Tb.sequelize.query(
+        'select prd.tb_institution_id, prd.id tb_product_id, prd.description name_product,prl.id tb_price_list_id, prl.description name_price_list, prc.price_tag ' +
+        'from tb_price prc ' +
+        '  inner join tb_price_list prl ' +
+        '  on (prc.tb_price_list_id = prl.id) ' +
+        '  and (prc.tb_institution_id = prl.tb_institution_id) ' +
+        '  inner join tb_product prd  ' +
+        '  on (prc.tb_product_id = prd.id)  ' +
+        '  and (prc.tb_institution_id = prd.tb_institution_id)  ' +
+        'where (prc.tb_institution_id =? )  ' +
+        'and ( prc.tb_product_id =? ) ',
+        {
+          replacements: [tb_institution_id, tb_product_id],
+          type: Tb.sequelize.QueryTypes.SELECT
+        }).then(data => {
+          var dataResult = {};
+          if (data.length > 0) {
+            dataResult = {
+              tb_institution_id: data[0].tb_institution_id,
+              id: data[0].tb_product_id,
+              name_product: data[0].name_product,
+            }
+            var items = [];
+            var itemResult = {};
+            for (var item of data) {
+              itemResult = {
+                id: item.tb_price_list_id,
+                name_price_list: item.name_price_list,
+                price_tag: Number(item.price_tag)
+              }
+              items.push(itemResult);
+            }
+            dataResult.items = items;
+            resolve(dataResult);
+          } else {
+            resolve("Sem dados");
+          }
+        })
     });
     return promise;
   };
@@ -219,9 +262,9 @@ class ProdcutController extends Base {
   static async update(product) {
     const promise = new Promise((resolve, reject) => {
 
-      if (product.validity == '') delete product.product.validity;
+      if (product.validity == '') delete product.validity;
       Tb.update(product.product, {
-        where: { id: product.product.id }
+        where: { id: product.id }
       })
       //grava o preço
       var pricelist = product.pricelist;
@@ -229,9 +272,9 @@ class ProdcutController extends Base {
       for (var item of pricelist) {
 
         dataPrice = {
-          tb_institution_id: product.product.tb_institution_id,
+          tb_institution_id: product.tb_institution_id,
           tb_price_list_id: item.id,
-          tb_product_id: product.product.id,
+          tb_product_id: product.id,
           price_tag: item.price_tag
         }
         price.update(dataPrice);

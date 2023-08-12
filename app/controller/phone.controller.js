@@ -3,16 +3,44 @@ const db = require("../model");
 const Tb = db.phone;
 
 class PhoneController extends Base {
-  static async getById(id, kind) {
+  static async sync(body) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        var regAddress = {};
+        for (var item of body.phoneList) {
+          item.id = body.entity.id;
+          regAddress = await this.getByKey(item.id, item.kind);
+          if (regAddress.id == 0) {
+            await Tb.create(item);
+          } else {
+            await Tb.update(item, {
+              where: {
+                id: item.id,
+                kind: item.kind
+              }
+            });
+          }
+        }
+        resolve({
+          body: body,
+          id: 200,
+          Message: "SYNCHED"
+        });
+      } catch (error) {
+        reject("PhoneController.sync:" + error);
+      }
+    });
+    return promise;
+  }
+
+  static async getByKey(id, kind) {
     const promise = new Promise((resolve, reject) => {
       try {
         var sqltxt =
           'Select * ' +
           'from tb_phone ' +
-          'where ( id =?) ';
-        if (kind.length > 0)
-          sqltxt = sqltxt +
-            ' and kind =?';
+          'where ( id =?) '+
+          ' and  ( kind =?)';
         Tb.sequelize.query(
           sqltxt,
           {
@@ -23,7 +51,7 @@ class PhoneController extends Base {
             if (data.length > 0)
               resolve(data[0])
             else
-              resolve(data);
+              resolve({id:0});
           })
           .catch(err => {
             reject('Phone.getById: ' + err);

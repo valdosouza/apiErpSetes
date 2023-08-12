@@ -48,8 +48,16 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: null,
       field: "kind"
-    },    
-
+    },
+    tb_product_id: {
+      type: DataTypes.INTEGER(11),
+      allowNull: false,
+      defaultValue: 0,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: null,
+      field: "tb_product_id"
+    },
     tb_stock_list_id: {
       type: DataTypes.INTEGER(11),
       allowNull: false,
@@ -68,16 +76,6 @@ module.exports = sequelize => {
       comment: null,
       field: "tb_price_list_id"
     },
-    tb_product_id: {
-      type: DataTypes.INTEGER(11),
-      allowNull: false,
-      defaultValue: 0,
-      primaryKey: false,
-      autoIncrement: false,
-      comment: null,
-      field: "tb_product_id"
-    },
-    
     quantity: {
       type: DataTypes.DECIMAL,
       allowNull: true,
@@ -96,7 +94,7 @@ module.exports = sequelize => {
       comment: null,
       field: "unit_value"
     },
-    discount_aliqu: {
+    discount_aliquot: {
       type: DataTypes.DECIMAL,
       allowNull: true,
       defaultValue: null,
@@ -131,33 +129,13 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: null,
       field: "updated_at"
-    }    
+    }
   };
   const options = {
     tableName: "tb_order_item",
     timestamps: true,
     comment: "",
-    indexes: [{
-      name: "tb_product_id",
-      unique: false,
-      type: "BTREE",
-      fields: ["tb_product_id"]
-    }, {
-      name: "tb_order_id",
-      unique: false,
-      type: "BTREE",
-      fields: ["tb_order_id"]
-    }, {
-      name: "tb_institution_id",
-      unique: false,
-      type: "BTREE",
-      fields: ["tb_institution_id"]
-    }, {
-      name: "tb_stock_list_id",
-      unique: false,
-      type: "BTREE",
-      fields: ["tb_stock_list_id"]
-    }]
+    indexes: []
   };
   const OrderItemModel = sequelize.define("tb_order_item_model", attributes, options);
   return OrderItemModel;

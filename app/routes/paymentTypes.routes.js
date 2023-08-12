@@ -35,6 +35,30 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
   *   description: The PaymentType managing API
   */
 
+ /**
+ * @swagger
+ * /paymenttype/sync:
+ *   post:
+ *     summary: Sincronize a new paymentType
+ *     tags: [PaymentType]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PaymentType'
+ *     responses:
+ *       200:
+ *         description: The PaymentType was successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PaymentType'
+ *       500:
+ *         description: Some server error
+ */
+ router.post("/sync/", paymentType.sync);
+
 /**
  * @swagger
  * /paymenttype:

@@ -154,18 +154,18 @@ class OrderConsignmentController extends Base {
       try {
         //Não salva tb_order por que já foi criado no attendance             
         var dataOrder = {
-          id: body.Order.id,
-          tb_institution_id: body.Order.tb_institution_id,
+          id: body.order.id,
+          tb_institution_id: body.order.tb_institution_id,
           terminal: 0,
-          tb_customer_id: body.Order.tb_customer_id,
-          tb_salesman_id: body.Order.tb_salesman_id,
-          dt_record: body.Order.dt_record,
+          tb_customer_id: body.order.tb_customer_id,
+          tb_salesman_id: body.order.tb_salesman_id,
+          dt_record: body.order.dt_record,
           kind: "checkpoint",
           number: 0,
-          total_value: body.Order.total_value,
-          change_value: body.Order.change_value,
-          previous_debit_balance: body.Order.previous_debit_balance,
-          current_debit_balance: body.Order.current_debit_balance,
+          total_value: body.order.total_value,
+          change_value: body.order.change_value,
+          previous_debit_balance: body.order.previous_debit_balance,
+          current_debit_balance: body.order.current_debit_balance,
         };
 
         this.insert(dataOrder)
@@ -185,15 +185,15 @@ class OrderConsignmentController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var dataOrder = {
-          id: body.Order.id,
-          tb_institution_id: body.Order.tb_institution_id,
+          id: body.order.id,
+          tb_institution_id: body.order.tb_institution_id,
           terminal: 0,
-          tb_customer_id: body.Order.tb_customer_id,
-          dt_record: body.Order.dt_record,
-          tb_salesman_id: body.Order.tb_salesman_id,
+          tb_customer_id: body.order.tb_customer_id,
+          dt_record: body.order.dt_record,
+          tb_salesman_id: body.order.tb_salesman_id,
           kind: "supplying",
           number: 0,
-          current_debit_balance: body.Order.current_debit_balance,
+          current_debit_balance: body.order.current_debit_balance,
         };
         this.insert(dataOrder)
           .then(async () => {
@@ -227,10 +227,10 @@ class OrderConsignmentController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var dataItem = {};
-        for (var item of body.Items) {
+        for (var item of body.items) {
           dataItem = {
-            id: body.Order.id,
-            tb_institution_id: body.Order.tb_institution_id,
+            id: body.order.id,
+            tb_institution_id: body.order.tb_institution_id,
             terminal: 0,
             tb_product_id: item.tb_product_id,
             kind: 'checkpoint',
@@ -257,10 +257,10 @@ class OrderConsignmentController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var dataItem = {};
-        for (var item of body.Items) {
+        for (var item of body.items) {
           dataItem = {
-            id: body.Order.id,
-            tb_institution_id: body.Order.tb_institution_id,
+            id: body.order.id,
+            tb_institution_id: body.order.tb_institution_id,
             terminal: 0,
             tb_product_id: item.tb_product_id,
             bonus: item.bonus,
@@ -291,8 +291,8 @@ class OrderConsignmentController extends Base {
           var dataPayment = {};
           for (var item of body.Payments) {
             dataPayment = {
-              id: body.Order.id,
-              tb_institution_id: body.Order.tb_institution_id,
+              id: body.order.id,
+              tb_institution_id: body.order.tb_institution_id,
               terminal: 0,
               tb_payment_type_id: item.tb_payment_type_id,
               value: item.value
@@ -341,18 +341,18 @@ class OrderConsignmentController extends Base {
   static async insertOrderPaid(body) {
     const promise = new Promise(async (resolve, reject) => {
 
-      if (body.Order.number == 0)
-        body.Order.number = await this.getNextNumber(body.Order.tb_institution_id);
+      if (body.order.number == 0)
+        body.order.number = await this.getNextNumber(body.order.tb_institution_id);
 
       const dataOrder = {
-        id: body.Order.id,
-        tb_institution_id: body.Order.tb_institution_id,
+        id: body.order.id,
+        tb_institution_id: body.order.tb_institution_id,
         terminal: 0,
-        number: body.Order.number,
-        tb_customer_id: body.Order.tb_customer_id,
-        total_value: body.Order.total_value,
-        change_value: body.Order.change_value,
-        debit_balance: body.Order.debit_balance
+        number: body.order.number,
+        tb_customer_id: body.order.tb_customer_id,
+        total_value: body.order.total_value,
+        change_value: body.order.change_value,
+        debit_balance: body.order.debit_balance
       }
       Tb.create(dataOrder)
         .then(() => {
@@ -394,7 +394,7 @@ class OrderConsignmentController extends Base {
           resolve(data);
         })
         .catch(err => {
-          reject("orderstockadjust.getlist: " + err);
+          reject("orderConsignment.getlist: " + err);
         });
     });
     return promise;
@@ -472,7 +472,7 @@ class OrderConsignmentController extends Base {
             resolve(data);
         })
         .catch(err => {
-          reject('orderstockadjust.get: ' + err);
+          reject('orderConsignment.get: ' + err);
         });
     });
     return promise;
@@ -480,53 +480,57 @@ class OrderConsignmentController extends Base {
 
   static getLastOrderByCustomer(tb_institution_id, tb_customer_id) {
     const promise = new Promise((resolve, reject) => {
-      Tb.sequelize.query(
-        'select ' +
-        'ord.id, ' +
-        'ord.tb_institution_id, ' +
-        'ord.tb_user_id, ' +
-        'orc.tb_customer_id, ' +
-        'ctm.nick_trade name_customer, ' +
+      var sqltxt = 
+      'select ' +
+      'ord.id, ' +
+      'ord.tb_institution_id, ' +
+      'ord.tb_user_id, ' +
+      'orc.tb_customer_id, ' +
+      'ctm.nick_trade name_customer, ' +
+      'orc.tb_salesman_id, ' +
+      'slm.name_company name_salesman, ' +
+      'total_value, ' +
+      'orc.change_value,  ' +
+      'orc.current_debit_balance, ' +
+      'ord.dt_record, ' +
+      'orc.number, ' +
+      'ord.status, ' +
+      'CAST(ord.note AS CHAR(1000) CHARACTER SET utf8) note  ' +
+      'from tb_order ord ' +
+      '   inner join tb_order_consignment orc ' +
+      '   on (orc.id = ord.id)  ' +
+      '     and (orc.tb_institution_id = ord.tb_institution_id) ' +
+      '     and (orc.terminal = ord.terminal)  ' +
+      '   inner join tb_entity ctm  ' +
+      '   on (ctm.id = orc.tb_customer_id) ' +
+      '   inner join tb_entity slm  ' +
+      '   on (slm.id = orc.tb_salesman_id) ' +
+      'where  (ord.id  = ( ' +
+      '    select max(ord.id) id ' +
+      '    from tb_order ord  ' +
+      '       inner join tb_order_consignment orc  ' +
+      '       on (orc.id = ord.id)  ' +
+      '         and (orc.tb_institution_id = ord.tb_institution_id)  ' +
+      '         and (orc.terminal = ord.terminal)   ' +
+      '    where (ord.tb_institution_id =? )  ' +
+      '     and (orc.tb_customer_id =? ) ' +
+      ' and (orc.kind =?) ' +
+      '    )) ' +
+      'limit 1 ';      
+      try {
+        Tb.sequelize.query(
+          sqltxt,
+          {
+            replacements: [tb_institution_id, tb_customer_id,'supplying'],
+            type: Tb.sequelize.QueryTypes.SELECT
+          }).then(data => {
+            resolve(data[0]);
+          })       
+      } catch (error) {
+        reject('OrderConsignment.getLastOrderByCustomer: ' + error);
+      }
 
-        'orc.tb_salesman_id, ' +
-        'slm.name_company name_salesman, ' +
-        'orc.total_value, ' +
-        'orc.change_value,  ' +
-        'orc.current_debit_balance, ' +
-        'ord.dt_record, ' +
-        'orc.number, ' +
-        'ord.status, ' +
-        'CAST(ord.note AS CHAR(1000) CHARACTER SET utf8) note  ' +
-        'from tb_order ord ' +
-        '   inner join tb_order_consignment orc ' +
-        '   on (orc.id = ord.id)  ' +
-        '     and (orc.tb_institution_id = ord.tb_institution_id) ' +
-        '     and (orc.terminal = ord.terminal)  ' +
-        '   inner join tb_entity ctm  ' +
-        '   on (ctm.id = orc.tb_customer_id) ' +
-        '   inner join tb_entity slm  ' +
-        '   on (slm.id = orc.tb_salesman_id) ' +
-        'where  (ord.id  = ( ' +
-        '    select max(ord.id) id ' +
-        '    from tb_order ord  ' +
-        '       inner join tb_order_consignment orc  ' +
-        '       on (orc.id = ord.id)  ' +
-        '         and (orc.tb_institution_id = ord.tb_institution_id)  ' +
-        '         and (orc.terminal = ord.terminal)   ' +
-        '    where (ord.tb_institution_id =? )  ' +
-        '     and (orc.tb_customer_id =? ) ' +
-        ' and (orc.kind ="supplying") ' +
-        '    )) ' +
-        'limit 1 ',
-        {
-          replacements: [tb_institution_id, tb_customer_id],
-          type: Tb.sequelize.QueryTypes.SELECT
-        }).then(data => {
-          resolve(data[0]);
-        })
-        .catch(err => {
-          reject('OrderConsignment.getLastOrderByCustomer: ' + err);
-        });
+
     });
     return promise;
   }
@@ -552,7 +556,7 @@ class OrderConsignmentController extends Base {
           resolve(data[0].status);
         })
         .catch(err => {
-          reject('orderstockadjust.getStatus: ' + err);
+          reject('orderConsignment.getStatus: ' + err);
         });
     });
     return promise;
@@ -576,9 +580,9 @@ class OrderConsignmentController extends Base {
               change_value: data.change_value,
               debit_balance: data.debit_balance,
             };
-            result.Order = dataOrder;
+            result.order = dataOrder;
             const dataItems = await consignmentCard.getCheckpointList(tb_institution_id, id);
-            result.Items = dataItems;
+            result.items = dataItems;
             resolve(result);
           })
       }
@@ -603,9 +607,9 @@ class OrderConsignmentController extends Base {
                 dt_record: data.dt_record,
                 name_customer: data.name_customer
               };
-              result.Order = dataOrder;
+              result.order = dataOrder;
               const dataItems = await consignmentCard.getSupplyingList(tb_institution_id, id);
-              result.Items = dataItems;
+              result.items = dataItems;
               resolve(result);
             } else {
               resolve({ result: "Ordem não encontrada" });
@@ -623,7 +627,7 @@ class OrderConsignmentController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var result = {};
-        this.getLastOrderByCustomer(tb_institution_id, tb_customer_id)
+        await this.getLastOrderByCustomer(tb_institution_id, tb_customer_id)
           .then(async data => {
             if (data) {
               var dataOrder = {
@@ -636,10 +640,10 @@ class OrderConsignmentController extends Base {
                 dt_record: data.dt_record,
                 current_debit_balance: data.current_debit_balance,
               };
-              result.Order = dataOrder;
+              result.order = dataOrder;
               const dataItems = await consignmentCard.getSupplyingList(tb_institution_id, data.id);
               if (dataItems.length > 0)
-                result.Items = dataItems;
+                result.items = dataItems;
               resolve(result);
             } else {
               entityController.getById(tb_customer_id)
@@ -653,10 +657,10 @@ class OrderConsignmentController extends Base {
                     name_salesman: "",
                     current_debit_balance: "0.00",
                   };
-                  result.Order = dataOrder;
+                  result.order = dataOrder;
                   const dataItems = await consignmentCard.getSupplyingNewList(tb_institution_id);
                   if (dataItems.length > 0)
-                    result.Items = dataItems;
+                    result.items = dataItems;
                   resolve(result);
                 });
             }
@@ -700,11 +704,11 @@ class OrderConsignmentController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var dataItem = {};
-        for (var item of body.Items) {
+        for (var item of body.items) {
           dataItem = {
             id: 0,
-            tb_institution_id: body.Order.tb_institution_id,
-            tb_order_id: body.Order.id,
+            tb_institution_id: body.order.tb_institution_id,
+            tb_order_id: body.order.id,
             terminal: 0,
             tb_stock_list_id: item.tb_stock_list_id,
             tb_product_id: item.tb_product_id,
@@ -739,12 +743,12 @@ class OrderConsignmentController extends Base {
   static async updateOrderPaid(body) {
     const promise = new Promise(async (resolve, reject) => {
       const dataOrderStockAdjust = {
-        id: body.Order.id,
-        tb_institution_id: body.Order.tb_institution_id,
+        id: body.order.id,
+        tb_institution_id: body.order.tb_institution_id,
         terminal: 0,
-        tb_user_id: body.Order.tb_user_id,
-        dt_record: body.Order.dt_record,
-        note: body.Order.note
+        tb_user_id: body.order.tb_user_id,
+        dt_record: body.order.dt_record,
+        note: body.order.note
       }
       Tb.update(dataOrderStockAdjust, {
         where: {
@@ -870,7 +874,7 @@ class OrderConsignmentController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var qtde = 0;
-        for (var item of body.Items) {
+        for (var item of body.items) {
           qtde += item.new_consignment;
         }
         if (qtde > 0) {
@@ -889,12 +893,12 @@ class OrderConsignmentController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var dataItem = {};
-        for (var item of body.Items) {
+        for (var item of body.items) {
           if (item.new_consignment > 0) {
             dataItem = {
               id: 0,
-              tb_institution_id: body.Order.tb_institution_id,
-              tb_order_id: body.Order.id,
+              tb_institution_id: body.order.tb_institution_id,
+              tb_order_id: body.order.id,
               terminal: 0,
               tb_stock_list_id: body.StockOrigen.tb_stock_list_id,
               tb_product_id: item.tb_product_id,
@@ -918,7 +922,7 @@ class OrderConsignmentController extends Base {
   static async closurebyCard(body, operation) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        var items = await this.getItemList(body.Order.tb_institution_id, body.Order.id, operation);
+        var items = await this.getItemList(body.order.tb_institution_id, body.order.id, operation);
         var dataItem = {};
         for (var item of items) {
           dataItem = {
@@ -930,7 +934,7 @@ class OrderConsignmentController extends Base {
             tb_stock_list_id: item.tb_stock_list_id,
             local: "web",
             kind: "Fechamento",
-            dt_record: body.Order.dt_record,
+            dt_record: body.order.dt_record,
             direction: "S",
             tb_merchandise_id: item.tb_product_id,
             quantity: item.quantity,
@@ -946,7 +950,7 @@ class OrderConsignmentController extends Base {
           await stockStatement.insert(dataItem);
 
         };
-        await order.updateStatus(body.Order.tb_institution_id, body.Order.id, 'F');
+        await order.updateStatus(body.order.tb_institution_id, body.order.id, 'F');
         resolve("200");
       } catch (err) {
         reject(err);

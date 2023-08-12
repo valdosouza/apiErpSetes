@@ -1,15 +1,45 @@
 const Base = require('./base.controller.js');
 const db = require("../model");
 const Tb = db.collaborator;
-const entity = require('./entity.controller.js');
-const person = require('./person.controller.js');
-const company = require('./company.controller.js');
-const address = require('./address.controller.js');
-const phone = require('./phone.controller.js');
-const user = require('./user.controller.js');
-const md5 = require('md5');
+const fiscalController = require('./fiscal.controller.js');
 
 class CollaboratorController extends Base {
+
+  static async sync(body) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+
+        await fiscalController.sync(body.fiscal)
+          .then(async (data) => {
+
+            body.fiscal.person = data.body.person;
+            body.fiscal.company = data.body.company;
+
+            var regCollaborator = await this.getById(body.fiscal.objEntity.tb_institution_id, body.fiscal.objEntity.entity.id);
+            if (regCollaborator.id == 0) {
+              body.collaborator.id = body.fiscal.objEntity.entity.id;
+              await Tb.create(body.collaborator);
+            } else {
+              body.collaborator.id = body.fiscal.objEntity.entity.id;
+              await Tb.update(body.collaborator, {
+                where: {
+                  tb_institution_id: body.collaborator.tb_institution_id,
+                  id: body.collaborator.id
+                }
+              });
+            }
+            resolve({
+              body: body,
+              id: 200,
+              Message: "SYNCHED"
+            });
+          })
+      } catch (error) {
+        reject("Collaborator.sync:" + error);
+      }
+    });
+    return promise;
+  }
 
   static async getById(tb_institution_id, id) {
     const promise = new Promise((resolve, reject) => {
@@ -22,7 +52,11 @@ class CollaboratorController extends Base {
           replacements: [tb_institution_id, id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
-          resolve(data);
+          if (data.length > 0) {
+            resolve(data[0]);
+          } else {
+            resolve({ id: 0 });
+          }
         })
         .catch(err => {
           reject('Collaborator.getById: ' + err);
@@ -77,7 +111,7 @@ class CollaboratorController extends Base {
               resolve(data);
             })
         } else {
-          
+
           collaborator.collaborator.id = resultDoc[0].id;
           this.insertParcial(collaborator)
             .then((data) => {
@@ -145,7 +179,7 @@ class CollaboratorController extends Base {
               active: "S"
             }
             user.createAuto(userModel);
-            
+
             //REtornogeral              
             resolve(collaborator);
           })
@@ -164,9 +198,9 @@ class CollaboratorController extends Base {
       try {
         //Insere o collaborator        
         const existCollaborator = await this.getById(collaborator.collaborator.tb_institution_id, collaborator.collaborator.id);
-        
+
         if (existCollaborator.length == 0) {
-          
+
           Tb.create(collaborator.collaborator);
         } else {
           Tb.update(collaborator.collaborator, {

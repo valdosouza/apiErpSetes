@@ -45,6 +45,17 @@ db.restGhAtt = require("./restGroupHasAttribute.model.js")(sequelize, Sequelize)
 db.paymentTypes = require("./payment_types.model.js")(sequelize, Sequelize);
 db.institutionHasPaymentType = require("./institutionHasPaymentTypes.model.js")(sequelize, Sequelize);
 
+db.category = require("./category.model.js")(sequelize, Sequelize);
+
+db.brand = require("./brand.model.js")(sequelize, Sequelize);
+db.institutionHasBrand = require("./institutionHasBrand.model.js")(sequelize, Sequelize);
+
+db.pack = require("./package.model.js")(sequelize, Sequelize);
+db.institutionHasPackage = require("./institutionHasPackage.model.js")(sequelize, Sequelize);
+
+db.measure = require("./measure.model.js")(sequelize, Sequelize);
+db.institutionHasMeasure = require("./institutionHasMeasure.model.js")(sequelize, Sequelize);
+
 db.lineBusiness = require("./linebusiness.model.js")(sequelize, Sequelize);
 db.institutionHasLineBusiness = require("./institutionHasLinebusiness.model.js")(sequelize, Sequelize);
 
@@ -73,14 +84,21 @@ db.stockStatement = require("./stockStatement.model.js")(sequelize, Sequelize);
 db.collaborator = require("./collaborator.model.js")(sequelize, Sequelize);
 
 db.customer = require("./customer.model.js")(sequelize, Sequelize);
+db.provider = require("./provider.model.js")(sequelize, Sequelize);
+db.salesman = require("./salesman.model.js")(sequelize, Sequelize);
 
 db.product = require("./product.model.js")(sequelize, Sequelize);
+db.merchandise = require("./merchandise.model.js")(sequelize, Sequelize);
+db.stock = require("./stock.model.js")(sequelize, Sequelize);
 db.order = require("./order.model.js")(sequelize, Sequelize);
-db.orderitem = require("./orderItem.model.js")(sequelize, Sequelize);
 db.orderproduction = require("./orderProduction.model.js")(sequelize, Sequelize);
 db.orderbonus = require("./orderBonus.model.js")(sequelize, Sequelize);
 db.orderstockadjust = require("./orderStockAdjust.model.js")(sequelize, Sequelize);
 db.ordersale = require("./orderSale.model.js")(sequelize, Sequelize);
+db.orderbilling = require("./orderBilling.model.js")(sequelize, Sequelize);
+db.ordertotalizer = require("./orderTotalizer.model.js")(sequelize, Sequelize);
+db.orderpurchase = require("./orderPurchase.model.js")(sequelize, Sequelize);
+
 db.ordersalecard = require("./orderSaleCard.model.js")(sequelize, Sequelize);
 db.orderstocktransfer = require("./orderStockTransfer.model.js")(sequelize, Sequelize);
 db.orderconsignment = require("./orderConsignment.model.js")(sequelize, Sequelize);
@@ -88,9 +106,21 @@ db.orderconsignmentcard = require("./orderConsignmentCard.model.js")(sequelize, 
 db.orderpaid = require("./orderPaid.model.js")(sequelize, Sequelize);
 db.orderattendance = require("./orderAttendance.model.js")(sequelize, Sequelize);
 db.cashier = require("./cashier.model.js")(sequelize, Sequelize);
-db.cashierclosure = require("./cashierClosure.model.js")(sequelize, Sequelize);
+db.cashieritems = require("./cashier_items.model.js")(sequelize, Sequelize);
 db.orderloadcard = require("./orderLoadCard.model.js")(sequelize, Sequelize);
 
+db.invoice = require("./invoice.model.js")(sequelize, Sequelize);
+db.invoicemerchandise = require("./invoiceMerchandise.model.js")(sequelize, Sequelize);
+db.invoiceshipping = require("./invoiceShipping.model.js")(sequelize, Sequelize);
+db.invoiceobs = require("./invoiceObs.model.js")(sequelize, Sequelize);
+
+db.orderitem = require("./orderItem.model.js")(sequelize, Sequelize);
+db.orderitemicms = require("./orderItemIcms.model.js")(sequelize, Sequelize);
+db.orderitemipi = require("./orderItemIpi.model.js")(sequelize, Sequelize);
+db.orderitempis = require("./orderItemPis.model.js")(sequelize, Sequelize);
+db.orderitemcofins = require("./orderItemCofins.model.js")(sequelize, Sequelize);
+db.orderitemii = require("./orderItemIi.model.js")(sequelize, Sequelize);
+db.orderitemissqn = require("./orderItemIssqn.model.js")(sequelize, Sequelize);
 
 db.restSubgroup = require("./restSubgroup.model.js")(sequelize, Sequelize);
 db.restGroup = require("./restGroup.model.js")(sequelize, Sequelize);

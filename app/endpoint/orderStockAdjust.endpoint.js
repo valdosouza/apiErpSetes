@@ -2,10 +2,29 @@ const OrderStockAdjustController = require("../controller/orderStockAdjust.contr
 
 class OrderStockAdjustEndPoint {
 
+  static sync = (req, res) => {
+    try {
+      OrderStockAdjustController.sync(req.body)
+        .then(data => {
+          res.send({
+            code: data.id,
+            id: 200,
+            Message: "SAVED"
+          })
+        })
+    } catch (error) {
+      res.send({
+        code: 0,
+        id: 500,
+        Message: error
+      })
+    }
+  }
+    
   static create = (req, res) => {
     OrderStockAdjustController.insert(req.body)
       .then(data => {
-        res.send(data.Order);
+        res.send(data.order);
       })
   }
 
@@ -29,7 +48,7 @@ class OrderStockAdjustEndPoint {
     OrderStockAdjustController.update(req.body)
       .then((data) => {
 
-        res.send(data.Order)
+        res.send(data.order)
       })
   }
 

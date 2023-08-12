@@ -1,9 +1,70 @@
 const Base = require('../controller/base.controller.js');
 const db = require("../model");
 const Tb = db.cashier;
+const CashierItemsController = require('./cashier_items.controller.js');
 const dateFunction = require('../util/dateFunction.js');
 
 class CashierController extends Base {
+
+  static async sync(body) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        var dataCashier = {
+          id: body.id,
+          tb_institution_id: body.tb_institution_id,
+          terminal: body.terminal,
+          tb_user_id: body.tb_user_id,
+          dt_record: body.dt_record,
+          hr_begin: body.hr_begin,
+          hr_end: body.hr_end
+        }
+        var regCashier = await this.getById(body.tb_institution_id, body.id);
+        if (regCashier.id == 0) {
+          await Tb.create(dataCashier);
+        } else {
+          await Tb.update(dataCashier, {
+            where: {
+              tb_institution_id: dataCashier.tb_institution_id,
+              id: dataCashier.id,
+            }
+          });
+        }
+        await CashierItemsController.sync(body);
+        resolve({
+          code: dataCashier.id,
+          id: 200,
+          Message: "SYNCHED"
+        });
+      } catch (error) {
+        reject("CashierController.sync:" + error);
+      }
+    });
+    return promise;
+  }
+
+  static async getById(tb_institution_id, id) {
+    const promise = new Promise((resolve, reject) => {
+      Tb.sequelize.query(
+        'Select * ' +
+        'from tb_cashier ' +
+        'WHERE ( tb_institution_id =? ) ' +
+        ' and (id = ?)',
+        {
+          replacements: [tb_institution_id, id],
+          type: Tb.sequelize.QueryTypes.SELECT
+        }).then(data => {
+          if (data.length > 0) {
+            resolve(data[0]);
+          } else {
+            resolve({ id: 0 });
+          }
+        })
+        .catch(err => {
+          reject('cashier.getNexId: ' + err);
+        });
+    });
+    return promise;
+  }
 
   static async getNextId(tb_institution_id) {
     const promise = new Promise((resolve, reject) => {
@@ -47,7 +108,7 @@ class CashierController extends Base {
           if (data.length > 0) {
             if (data[0].hr_end) { var status = "F" } else { var status = "A" };
             resolve({
-              id:data[0].id,
+              id: data[0].id,
               tb_institution_id: data[0].tb_institution_id,
               tb_user_id: data[0].tb_user_id,
               dt_record: data[0].dt_record,
@@ -73,7 +134,7 @@ class CashierController extends Base {
   static async autoCreate(tb_institution_id, tb_user_id) {
     const promise = new Promise(async (resolve, reject) => {
 
-      var cashier = await this.getLastIdOpen(tb_institution_id, tb_user_id);   
+      var cashier = await this.getLastIdOpen(tb_institution_id, tb_user_id);
       if (cashier.status != 'A') {
         try {
           await this.open(tb_institution_id, tb_user_id);

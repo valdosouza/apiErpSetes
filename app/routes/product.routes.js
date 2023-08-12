@@ -10,24 +10,46 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * @swagger
  * components:
  *   schemas:
- *     Product:
+ *     product:
  *       type: object
  *       required:
  *         - id
  *         - tb_institution_id
+ *         - identifier
  *         - description
+ *         - tb_category_id
+ *         - tb_financial_plans_id
+ *         - promotion
+ *         - highlights
  *         - active
+ *         - published
+ *         - note
+ * 
  *       properties:
  *         id:
  *           type: integer
  *         tb_institution_id:
  *           type: integer
+ *         identifier:
+ *           type: string
  *         description:
  *           type: string
+ *         tb_category_id:
+ *           type: integer
+ *         tb_financial_plans_id:
+ *           type: integer 
+ *         promotion:
+ *           type: string
+ *         highlights:
+ *           type: string 
  *         active:
  *           type: string
+ *         published:
+ *           type: string
+ *         note:
+ *           type: string 
  * 
- *     PriceListPrice:
+ *     priceListPrice:
  *       type: object
  *       required:
  *         - tb_price_list_id
@@ -40,17 +62,17 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *         price_tag:
  *           type: number
  * 
- *     ProductMain:
+ *     productMain:
  *       type: object
  *       properties:
  *         product:
- *           $ref: '#/components/schemas/Product'
+ *           $ref: '#/components/schemas/product'
  *         priceilist:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/PriceListPrice'
+ *              $ref: '#/components/schemas/priceListPrice'
  * 
- *     ProductPrice:
+ *     productPrice:
  *       type: object
  *       properties:
  *         id:
@@ -60,7 +82,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *         price_tag:
  *           type: number 
  * 
- *     PriceListProductPrice:
+ *     priceListproductPrice:
  *       type: object
  *       properties:
  *         tb_price_list_id:
@@ -70,9 +92,9 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *         product_price:
  *           type: array
  *           items: 
- *             $ref: '#/components/schemas/ProductPrice' 
+ *             $ref: '#/components/schemas/productPrice' 
  * 
- *     ProductParams:
+ *     productParams:
  *       type: object
  *       properties:
  *         page:
@@ -84,6 +106,31 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *         name_product:
  *           type: string
  *
+ *     productPriceList:
+ *       type: object
+ *       properties:
+ *         tb_institution_id:
+ *           type: integer 
+ *         id:
+ *           type: integer
+ *         name_product:
+ *           type: string
+ *         product_price:
+ *           type: array
+ *           items: 
+ *             $ref: '#/components/schemas/priceProduct' 
+ * 
+ *     priceProduct:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         name_price_list:
+ *           type: string
+ *         price_tag:
+ *           type: number
+ * 
+ * 
  */
 
  /**
@@ -127,7 +174,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/ProductParams'
+ *             $ref: '#/components/schemas/productParams'
  *     responses:
  *       200:
  *         description: The list of the payment types
@@ -170,9 +217,32 @@ router.post("/getlist/", product.getList);
  *               items:
  *                 $ref: '#/components/schemas/ProductMain'
  */
-
  router.get("/get/:tb_institution_id/:id", product.get);
 
+
+/**
+ * @swagger
+ * /product/getPrices/{tb_institution_id}/{tb_product_id}:
+ *   get:
+ *     summary: Returns the Product List Prices
+ *     tags: [Product]
+ *     parameters:
+ *      - in: path
+ *        name: tb_institution_id
+ *      - in: path
+ *        name: tb_product_id
+ *     responses:
+ *       200:
+ *         description: The Product List
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/productPriceList'
+ *
+ *
+ */
+router.get("/getPrices/:tb_institution_id/:tb_product_id", product.getPriceByProduct);
+ 
 /**
  * @swagger
  * /product/pricelist/getall/{tb_institution_id}:
@@ -194,7 +264,7 @@ router.post("/getlist/", product.getList);
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/PriceListProductPrice'
+ *                 $ref: '#/components/schemas/priceListproductPrice'
  */
 
 router.get("/pricelist/getall/:tb_institution_id/", product.priceListGetAll);

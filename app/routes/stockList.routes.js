@@ -40,6 +40,32 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
 
 /**
  * @swagger
+ * /stockList/sync:
+ *   post:
+ *     summary: Sincronize Stock List
+ *     tags: [StockList]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             allOf:
+ *               - $ref: '#/components/schemas/StockList'
+ *     responses:
+ *       200:
+ *         description: The Stock List was successfully sincronized 
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/StockList'
+ *       500:
+ *         description: Some server error
+ */
+router.post("/sync/", stocklist.sync);
+
+/**
+ * @swagger
  * /stockList:
  *   post:
  *     summary: Create a new Stock List

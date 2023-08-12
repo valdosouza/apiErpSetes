@@ -59,7 +59,7 @@ module.exports = sequelize => {
     },
     flex_value: {
       type: DataTypes.DECIMAL,
-      allowNull: false,
+      allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,

@@ -2,6 +2,36 @@ const Base = require("../controller/base.controller.js");
 const db = require("../model");
 const Tb = db.address;
 class AddressController extends Base {
+
+  static async sync(body) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        for (var item of body.addressList) {
+          item.id = body.entity.id;
+          var regAddress = await this.getByKey(item.id, item.kind);
+          if (regAddress.id == 0) {
+            await Tb.create(item);
+          } else {            
+            await Tb.update(item, {
+              where: {
+                id: item.id,
+                kind: item.kind
+              }
+            });
+          }
+        }
+        resolve({
+          body: body,
+          id: 200,
+          Message: "SYNCHED"
+        });
+      } catch (error) {
+        reject("AddressController.sync:" + error);
+      }
+    });
+    return promise;
+  }
+
   static async getById(id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize
@@ -45,6 +75,58 @@ class AddressController extends Base {
         })
         .catch((err) => {
           reject("Address.getById: " + err);
+        });
+    });
+    return promise;
+  }
+
+  static async getByKey(id, kind) {
+    const promise = new Promise((resolve, reject) => {
+      Tb.sequelize
+        .query(
+          "Select  " +
+          "a.id, " +
+          "a.street, " +
+          "a.nmbr, " +
+          "a.complement, " +
+          "a.neighborhood, " +
+          "a.region, " +
+          "a.kind, " +
+          "a.zip_code, " +
+          "a.tb_country_id, " +
+          "cy.name name_country, " +
+          "a.tb_state_id, " +
+          "st.name name_state, " +
+          "a.tb_city_id, " +
+          "ct.name name_city, " +
+          "a.main, " +
+          "a.longitude, " +
+          "a.latitude, " +
+          "a.created_at, " +
+          "a.updated_at " +
+          "from tb_address a " +
+          "    inner join tb_city ct   " +
+          "    on (ct.id = a.tb_city_id)   " +
+          "    inner join tb_state st   " +
+          "    on (st.id = a.tb_state_id)   " +
+          "    inner join tb_country cy  " +
+          "    on (cy.id = a.tb_country_id)  " +
+          "where ( a.id = ?) " +
+          '  and ( a.kind = ?)',
+          {
+            replacements: [id, kind],
+            type: Tb.sequelize.QueryTypes.SELECT,
+          }
+        )
+        .then((data) => {
+          if (data.length > 0) {
+            resolve(data[0]);
+          } else {
+            resolve({id:0});
+          }
+        })
+        .catch((err) => {
+          reject("Address.getByKey: " + err);
         });
     });
     return promise;

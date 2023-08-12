@@ -24,6 +24,19 @@ class StockListController extends Base {
     return promise;
   }
 
+  static async sync(stocklist) {
+
+    const promise = new Promise(async (resolve, reject) => {      
+      this.insert(stocklist)
+        .then((data) => {
+              resolve(data);
+        })
+        .catch(err => {
+          reject("StockListController.sync:" + err);
+        });
+    });
+    return promise;
+  }
 
   static async insert(stocklist) {
     const idNext = await this.getIdNext(stocklist.tb_institution_id);

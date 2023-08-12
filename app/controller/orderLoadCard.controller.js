@@ -123,7 +123,7 @@ class OrderLoadCardController extends Base {
       order.insert(dataOrder)
         .then(async (data) => {
           body.id = data.id;
-          for (var item of body.Items) {
+          for (var item of body.items) {
             try {
               item['id'] = body.id;
               item['tb_institution_id'] = body.tb_institution_id;

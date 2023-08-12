@@ -318,15 +318,15 @@ class OrderStockTransferController extends Base {
 
   static async finished(body) {
     const promise = new Promise(async (resolve, reject) => {
-      if (body.Order.recall == "S") {
-        await OrderController.updateNote(body.Order.tb_institution_id, body.Order.id, body.Order.note);
+      if (body.order.recall == "S") {
+        await OrderController.updateNote(body.order.tb_institution_id, body.order.id, body.order.note);
       }
 
 
       Tb.update({ finished: "S" }, {
         where: {
-          id: body.Order.id,
-          tb_institution_id: body.Order.tb_institution_id,
+          id: body.order.id,
+          tb_institution_id: body.order.tb_institution_id,
           terminal: 0
         }
       })

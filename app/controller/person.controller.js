@@ -1,22 +1,63 @@
-const Base = require('../controller/base.controller.js')  
+const Base = require('../controller/base.controller.js')
 const db = require("../model");
 const Tb = db.person;
+const entityController = require('./entity.controller.js');
+
 class PersonController extends Base {
 
-  static async getById(id) {    
+  static async sync(person) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        var regPerson = await this.getByCPF(person.cpf);        
+        if (regPerson.id == 0) {
+          var dataEntity = {
+            id: 0,
+            name_company: 'Gravando pessoa fisica',
+            nick_trade: 'Gravando pessoa fisica',
+          }
+          await entityController.insert(dataEntity)
+            .then((data) => {
+              person.id = data.id;
+              Tb.create(person)
+                .then((data) => {
+                  person.id = data.id;
+                });
+            })
+        } else {
+          person.id = regPerson.id;
+          await Tb.update(person, {
+            where: {
+              cpf: person.cpf
+            }
+          });
+        }
+        resolve({
+          body: person,
+          id: 200,
+          Message: "SYNCHED"
+        });
+      } catch (error) {
+        reject("PersonController.sync:" + error);
+      }
+    });
+    return promise;
+  }
+
+
+  static async getById(id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
-        'Select * ' +        
+        'Select * ' +
         'from tb_person ' +
-        'where ( id =?) ', 
+        'where ( id =?) ',
         {
           replacements: [id],
           type: Tb.sequelize.QueryTypes.SELECT
-        }).then(data => {          
-          if (data.length > 0)          
-          resolve(data[0])
-        else
-          resolve(data);
+        }).then(data => {
+          if (data.length > 0)
+            resolve(data[0])
+          else
+            resolve(data);
         })
         .catch(err => {
           reject('Person.getById: ' + err);
@@ -28,27 +69,27 @@ class PersonController extends Base {
   static async insert(person) {
 
     const promise = new Promise((resolve, reject) => {
-        if (person.rg_dt_emission == '')
-          delete person.rg_dt_emission;
-        if (person.birthday == '')
-          delete person.birthday;
+      if (person.rg_dt_emission == '')
+        delete person.rg_dt_emission;
+      if (person.birthday == '')
+        delete person.birthday;
 
-        Tb.create(person)
-            .then(data => {
-                resolve(data);
-            })
-            .catch(err => {
-                reject("Erro:"+ err);
-            });
+      Tb.create(person)
+        .then(data => {
+          resolve(data);
+        })
+        .catch(err => {
+          reject("Erro:" + err);
+        });
     });
     return promise;
-  }  
+  }
 
   static getList(body) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         'select  * ' +
-        'from tb_person '+
+        'from tb_person ' +
         'where id is not null',
         {
           //replacements: [body.tb_institution_id ],
@@ -63,19 +104,19 @@ class PersonController extends Base {
     return promise;
   }
 
-  static async update(person) {    
+  static async update(person) {
     const promise = new Promise((resolve, reject) => {
       if (person.rg_dt_emission == '') delete person.rg_dt_emission;
-      if (person.birthday == '')  delete person.birthday;
-      Tb.update(person,{
+      if (person.birthday == '') delete person.birthday;
+      Tb.update(person, {
         where: { id: person.id }
       })
-      .catch(err => {
-        reject("Erro:"+ err);
-      });
+        .catch(err => {
+          reject("Erro:" + err);
+        });
     });
-    return promise;        
-  }        
+    return promise;
+  }
 
   static async delete(person) {
     const promise = new Promise((resolve, reject) => {
@@ -89,31 +130,35 @@ class PersonController extends Base {
                 reject("Erro:"+ err);
             });
       */
-    });    
-    return promise;        
-  }  
+    });
+    return promise;
+  }
 
   static getByCPF(cpf) {
-    
+
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
-        'Select * ' +        
+        'Select * ' +
         'from tb_person    ' +
-        'where ( cpf = ?) ', 
+        'where ( cpf = ?) ',
         {
           replacements: [cpf],
           type: Tb.sequelize.QueryTypes.SELECT
-        }).then(data => {   
-          //deve retornar o vetor mesmo que vazio para a verificação na função subsequente
-          resolve(data);
+        }).then(data => {
+          if (data.length > 0) {
+            resolve(data[0]);
+          } else {
+            resolve({ id: 0 });
+          }
+
         })
         .catch(err => {
           reject(new Error("Algum erro aconteceu ao buscar o CNPJ"));
         });
     });
     return promise;
-  };  
+  };
 
 }
 
-module.exports =  PersonController; 
+module.exports = PersonController; 
