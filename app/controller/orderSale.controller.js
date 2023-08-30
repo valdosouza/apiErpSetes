@@ -274,6 +274,9 @@ class OrderSaleController extends Base {
         }
         sqltxt +=
           ' order by number DESC ';
+          ' limit ' + ((body.page - 1) * 20) + ',20 ';   
+ 
+
         Tb.sequelize.query(
           sqltxt,
           {

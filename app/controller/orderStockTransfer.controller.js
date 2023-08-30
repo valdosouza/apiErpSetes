@@ -157,7 +157,9 @@ class OrderStockTransferController extends Base {
         sqltxt += ' and (etd.nick_trade <> ?) ';
       }
       sqltxt +=
-        ' order by number DESC ';
+        ' order by nick_trade ' +
+        ' limit ' + ((body.page - 1) * 20) + ',20 ';   
+
       Tb.sequelize.query(
         sqltxt,
         {

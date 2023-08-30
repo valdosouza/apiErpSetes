@@ -7,7 +7,7 @@ const itensIcmsController = require('./orderItemIcms.controller.js')
 const itensIpiController = require('./orderItemIpi.controller.js')
 const itensPisController = require('./orderItemPis.controller.js')
 const itensCofinsController = require('./orderItemCofins.controller.js')
-const itensIiController = require('./orderItemIi.controller.js')
+const itensIiController = require('./orderItemII.controller.js')
 const itensIssqnController = require('./orderItemIssqn.controller.js')
 const iinvoiceObsController = require('./invoiceObs.controller.js')
 
