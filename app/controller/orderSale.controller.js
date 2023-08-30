@@ -273,7 +273,7 @@ class OrderSaleController extends Base {
           sqltxt += ' and (ctm.nick_trade <> ?) ';
         }
         sqltxt +=
-          ' order by number DESC ';
+          ' order by number DESC '+
           ' limit ' + ((body.page - 1) * 20) + ',20 ';   
  
 
