@@ -60,14 +60,14 @@ class OrderSaleEndPoint {
   }  
   static getList = (req, res) => {
     
-    OrderSaleController.getList(req.params.tb_institution_id,req.params.tb_salesman_id)
+    OrderSaleController.getList(req.body)
       .then(data => {
         res.send(data);
       })
   }
 
   static get = (req, res) => {    
-    OrderSaleController.get(req.params.tb_institution_id,req.params.tb_order_id)
+    OrderSaleController.get(req.params.tb_institution_id,req.params.tb_salesman_id,req.params.tb_order_id)
       .then(data => {
         res.send(data);
       })
@@ -77,6 +77,57 @@ class OrderSaleEndPoint {
     OrderSaleController.delete(req.body.tb_institution_id,req.body.id)
       .then(data => {             
           res.send({result: data});
+      })
+  }  
+
+  static closure(req, res) {
+
+    OrderSaleController.closure(req.body)
+      .then(data => {
+        if (data == 200) {
+          res.status(200)
+            .send({
+              result: true,
+              message: "A ordem foi fechada com sucesso!!"
+            });
+        } else if (data == 201) {
+          res.status(201)
+            .send({
+              result: true,
+              message: "A ordem já está fechada"
+            });
+        } else {
+          res.send({
+              result: false,
+              message: "Não foi possivel fechar a ordem!!"
+            });
+        }
+      })
+  }
+
+  static reopen(req, res) {
+
+    OrderSaleController.reopen(req.body)
+      .then(data => {
+        if (data == 200) {
+          res.status(200)
+            .send({
+              result: true,
+              message: "A ordem foi reaberta com sucesso!!"
+            });
+        } else if (data == 201) {
+          res.status(201)
+            .send({
+              result: true,
+              message: "A ordem já está aberta"
+            });
+        } else {
+          res.status()
+            .send({
+              result: false,
+              message: "Não foi possivel reabrir a ordem!!"
+            });
+        }
       })
   }  
 }

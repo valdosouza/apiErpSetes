@@ -1,6 +1,6 @@
 const { Router } = require("express");
-  
-const ordersale =  require("../endpoint/orderSale.endpoint.js");
+
+const ordersale = require("../endpoint/orderSale.endpoint.js");
 
 const { withJWTAuthMiddleware } = require("express-kun");
 const router = Router();
@@ -61,44 +61,53 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *           type: integer 
  * 
  *  
- *     resultDelete:
+ * 
+ *     orderParams:
  *       type: object
  *       properties:
- *         result:
- *           type: boolean
+ *         page:
+ *           type: integer
+ *         tb_institution_id:
+ *           type: integer 
+ *         tb_salesman_id:
+ *           type: integer 
+ *         number:
+ *           type: integer
+ *         nick_trade:
+ *           type: string 
  */
- 
- 
- /**
-  * @swagger
-  * tags:
-  *   name: OrderSale
-  *   description: The OrderSale managing API
-  */
 
- /**
+
+/**
  * @swagger
- * /ordersale/sync:
- *   post:
- *     summary: Create a new pricelist
- *     tags: [OrderSale]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/objOrderSale'
- *     responses:
- *       200:
- *         description: The objOrderSale was successfully created
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/objOrderSale'
- *       500:
- *         description: Some server error
+ * tags:
+ *   name: OrderSale
+ *   description: The OrderSale managing API
  */
- router.post("/sync/", ordersale.sync);
+
+/**
+* @swagger
+* /ordersale/sync:
+*   post:
+*     summary: Create a new pricelist
+*     tags: [OrderSale]
+*     requestBody:
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             $ref: '#/components/schemas/objOrderSale'
+*     responses:
+*       200:
+*         description: The objOrderSale was successfully created
+*         content:
+*           application/json:
+*             schema:
+*               $ref: '#/components/schemas/objOrderSale'
+*       500:
+*         description: Some server error
+*/
+router.post("/sync/", ordersale.sync);
 
 /**
  * @swagger
@@ -118,11 +127,11 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/objOrderSale'
+ *               $ref: '#/components/schemas/orderSale'
  *       500:
  *         description: Some server error
  */
- router.post("/", ordersale.create);
+router.post("/", ordersale.create);
 
 /**
  * @swagger
@@ -142,11 +151,11 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/objOrderSale'
+ *               $ref: '#/components/schemas/orderSale'
  *       500:
  *         description: Some server error
  */
-  router.put("/", ordersale.update);
+router.put("/", ordersale.update);
 
 /**
  * @swagger
@@ -166,49 +175,46 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/resultDelete'
+ *               $ref: '#/components/schemas/orderResulAction'
  *       500:
  *         description: Some server error
  */
 router.delete("/", ordersale.delete);
 
- /**
- * @swagger
- * /ordersale/getlist/{tb_institution_id}/{tb_salesman_id}:
- *   get:
- *     summary: Returns the list of all the OrderSale
- *     tags: [OrderSale]
- *     parameters:
- *      - in: path
- *        name: tb_institution_id
- *      - in: path
- *        name: tb_salesman_id
- *        schema:
- *          type: string
- *        required: true
- *        description: The ordersale tb_institution_id and tb_order_id
- *     responses:
- *       200:
- *         description: The list of the OrderSale
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/orderSale'
- */
-  //router.get("/getlist/:tb_institution_id", orderstocktransfer.getList);
-  router.get("/getlist/:tb_institution_id/:tb_salesman_id/", ordersale.getList); 
+/**
+* @swagger
+* /ordersale/getlist/:
+*   post:
+*     summary: Returns the list of all the OrderSale
+*     tags: [OrderSale]
+*     requestBody:
+*       content:
+*         application/json:
+*           schema:
+*             $ref: '#/components/schemas/orderParams'
+*     responses:
+*       200:
+*         description: The list of the payment types
+*         content:
+*           application/json:
+*             schema:
+*               type: array
+*               items:
+*                 $ref: '#/components/schemas/orderSale'
+*/
+router.post("/getlist", ordersale.getList);
 
 /**
  * @swagger
- * /ordersale/get/{tb_institution_id}/{tb_order_id}:
+ * /ordersale/get/{tb_institution_id}/{tb_salesman_id}/{tb_order_id}:
  *   get:
  *     summary: Returns the OrderSaleMain
  *     tags: [OrderSale]
  *     parameters:
  *      - in: path
  *        name: tb_institution_id
+ *      - in: path
+ *        name: tb_salesman_id
  *      - in: path
  *        name: tb_order_id
  *     responses:
@@ -218,7 +224,63 @@ router.delete("/", ordersale.delete);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/objOrderSale'
- */  
-  router.get("/get/:tb_institution_id/:tb_order_id/", ordersale.get); 
+ */
+router.get("/get/:tb_institution_id/:tb_salesman_id/:tb_order_id/", ordersale.get);
+
+
+
+/**
+ * @swagger
+ * /ordersale/closure:
+ *   post:
+ *     summary: Close status Order Sale
+ *     tags: [OrderSale]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/orderAction'
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/orderResulAction'
+ *       201:
+ *         description: The Order Sale is already closed
+ *       404:
+ *         description: The Order Sale was not found
+ *       500:
+ *         description: Some error happened
+ */
+
+protectedRouter.post("/closure/", ordersale.closure);
+/**
+ * @swagger
+ * /ordersale/reopen:
+ *   post:
+ *     summary: Reopen Status Order Sale
+ *     tags: [OrderSale]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/orderAction'
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/orderResulAction'
+ *       201:
+ *         description: The Order Sale is already open
+ *       404:
+ *         description: The Order Sale was not Found
+ *       500:
+ *         description: Some error happened
+ */
+protectedRouter.post("/reopen/", ordersale.reopen);
 
 module.exports = router;

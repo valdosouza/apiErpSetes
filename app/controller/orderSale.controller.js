@@ -6,6 +6,7 @@ const orderBilling = require('./orderBilling.controller.js');
 const orderTotalizer = require('./orderTotalizer.controller.js');
 const orderItemController = require('./orderItem.controller.js');
 const fiscalController = require('./fiscal.controller.js');
+const stockStatement = require('./stockStatement.controller.js');
 
 class OrderSaleController extends Base {
   static async getNextNumber(tb_institution_id) {
@@ -195,11 +196,11 @@ class OrderSaleController extends Base {
   }
 
 
-  static getList(tb_institution_id, tb_salesman_id) {
+  static getList(body) {
     const promise = new Promise((resolve, reject) => {
       try {
-
-        Tb.sequelize.query(
+        var nick_trade = "";
+        var sqltxt =
           'select ' +
           'ord.id , ' +
           'ord.tb_institution_id , ' +
@@ -227,7 +228,16 @@ class OrderSaleController extends Base {
           '   on (pslm.id  = slm.id)     ' +
           'where (ord.tb_institution_id =? )  ' +
           'and (ors.tb_salesman_id = ?) ' +
-          ' AND (ord.status <> ?) '+
+          ' AND (ord.status <> ?) ';
+
+        if (body.nick_trade != "") {
+          nick_trade = '%' + body.nick_trade + '%';
+          sqltxt += ' and (ctm.nick_trade like ? ) ';
+        } else {
+          nick_trade = "";
+          sqltxt += ' and (ctm.nick_trade <> ?) ';
+        }
+        sqltxt +=
           'union ' +
           'select  ' +
           'ord.id , ' +
@@ -256,10 +266,18 @@ class OrderSaleController extends Base {
           '   on (pslm.id  = slm.id)     ' +
           'where (ord.tb_institution_id =? )  ' +
           'and (ors.tb_salesman_id = ?) ' +
-          ' AND (ord.status <> ?) '+          
-          ' order by number DESC ',
+          ' AND (ord.status <> ?) ';
+        if (body.nick_trade != "") {
+          sqltxt += ' and (ctm.nick_trade like ? ) ';
+        } else {
+          sqltxt += ' and (ctm.nick_trade <> ?) ';
+        }
+        sqltxt +=
+          ' order by number DESC ';
+        Tb.sequelize.query(
+          sqltxt,
           {
-            replacements: [tb_institution_id, tb_salesman_id,'D', tb_institution_id, tb_salesman_id,'D'],
+            replacements: [body.tb_institution_id, body.tb_salesman_id, 'D', nick_trade, body.tb_institution_id, body.tb_salesman_id, 'D', nick_trade],
             type: Tb.sequelize.QueryTypes.SELECT
           }).then(data => {
             resolve(data);
@@ -333,7 +351,7 @@ class OrderSaleController extends Base {
     });
     return promise;
   }
-  static getOrder(tb_institution_id, id) {
+  static getOrder(tb_institution_id, tb_salesman_id, id) {
     const promise = new Promise((resolve, reject) => {
       var sqlTxtPerson =
         'select ' +
@@ -343,8 +361,14 @@ class OrderSaleController extends Base {
         ' pctm.cpf docCustomer, ' +
         ' ors.tb_salesman_id, ' +
         ' slm.nick_trade name_salesman, ' +
-        ' pslm.cpf docSalesman ' +
-        'from tb_order_sale ors  ' +
+        ' pslm.cpf docSalesman, ' +
+        ' ord.status ' +
+        'from tb_order ord  ' +
+        '   inner join tb_order_sale ors  ' +
+        '   on (ord.id = ors.id)' +
+        '   and (ord.tb_institution_id = ors.tb_institution_id)' +
+        '   and (ord.terminal = ors.terminal)' +
+
         '   inner join tb_entity ctm ' +
         '   on (ctm.id = ors.tb_customer_id)  ' +
         '   inner join tb_person pctm ' +
@@ -358,6 +382,7 @@ class OrderSaleController extends Base {
 
 
         'where (ors.tb_institution_id =? ) ' +
+        ' and (ors.tb_salesman_id = ?) ' +
         ' and (ors.id =? )';
 
       var sqlTxtCompany =
@@ -368,8 +393,14 @@ class OrderSaleController extends Base {
         ' cctm.cnpj doc_customer, ' +
         ' ors.tb_salesman_id, ' +
         ' slm.nick_trade name_salesman, ' +
-        ' pslm.cpf doc_salesman ' +
-        'from tb_order_sale ors  ' +
+        ' pslm.cpf doc_salesman, ' +
+        ' ord.status ' +
+        'from tb_order ord  ' +
+        '   inner join tb_order_sale ors  ' +
+        '   on (ord.id = ors.id)' +
+        '   and (ord.tb_institution_id = ors.tb_institution_id)' +
+        '   and (ord.terminal = ors.terminal)' +
+
         '   inner join tb_entity ctm ' +
         '   on (ctm.id = ors.tb_customer_id)  ' +
 
@@ -382,6 +413,7 @@ class OrderSaleController extends Base {
         '   inner join tb_person pslm ' +
         '   on (pslm.id = ors.tb_salesman_id)  ' +
         'where (ors.tb_institution_id =? ) ' +
+        ' and (ors.tb_salesman_id = ?)' +
         ' and (ors.id =? )';
 
       try {
@@ -390,7 +422,7 @@ class OrderSaleController extends Base {
           ' union ' +
           sqlTxtCompany,
           {
-            replacements: [tb_institution_id, id, tb_institution_id, id],
+            replacements: [tb_institution_id, tb_salesman_id, id, tb_institution_id, tb_salesman_id, id],
             type: Tb.sequelize.QueryTypes.SELECT
           }).then(data => {
 
@@ -421,6 +453,7 @@ class OrderSaleController extends Base {
         '   inner join tb_entity etd ' +
         '   on (etd.id = ora.tb_customer_id)  ' +
         'where (ord.tb_institution_id =? ) ' +
+
         ' and (ord.id =? )',
         {
           replacements: [tb_institution_id, id],
@@ -435,24 +468,24 @@ class OrderSaleController extends Base {
     return promise;
   }
 
-  static get = (tb_institution_id, tb_order_id) => {
+  static get = (tb_institution_id, tb_salesman_id, tb_order_id) => {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var result = {};
 
-        const dataOrder = await orderController.get(tb_institution_id, tb_order_id);
+        const dataOrder = await orderController.get(tb_institution_id, tb_salesman_id, tb_order_id);
         result.order = dataOrder;
 
-        const dataSale = await this.getOrder(tb_institution_id, tb_order_id);
+        const dataSale = await this.getOrder(tb_institution_id, tb_salesman_id, tb_order_id);
         result.sale = dataSale;
 
-        const dataBilling = await orderBilling.get(tb_institution_id, tb_order_id);
+        const dataBilling = await orderBilling.get(tb_institution_id, tb_salesman_id, tb_order_id);
         result.billing = dataBilling;
 
-        const dataTotalizer = await orderTotalizer.get(tb_institution_id, tb_order_id);
+        const dataTotalizer = await orderTotalizer.get(tb_institution_id, tb_salesman_id, tb_order_id);
         result.totalizer = dataTotalizer;
 
-        const dataItems = await orderItemController.getList(tb_institution_id, tb_order_id);
+        const dataItems = await orderItemController.getList(tb_institution_id, tb_salesman_id, tb_order_id);
         result.items = dataItems;
 
         resolve(result);
@@ -548,10 +581,10 @@ class OrderSaleController extends Base {
     return promise;
   }
 
-  static async delete(tb_institution_id,id) {
+  static async delete(tb_institution_id, id) {
     const promise = new Promise((resolve, reject) => {
       try {
-        orderController.delete(tb_institution_id,id)
+        orderController.delete(tb_institution_id, id)
           .then(() => {
             resolve(true);
           })
@@ -565,15 +598,15 @@ class OrderSaleController extends Base {
   static async closure(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        var status = this.getStatus(body.tb_institution_id, body.id);
-        if (status == 'A') {
-          var items = orderItem.getList(body.tb_institution_id, body.id);
+        var dataOrder = await this.getOrder(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
+        if ( (dataOrder.status == 'A') || (dataOrder.status == 'N') ) {
+          var items = await orderItemController.getList(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
           var dataItem = {};
           for (var item of items) {
             dataItem = {
               id: 0,
               tb_institution_id: body.tb_institution_id,
-              tb_order_id: body.id,
+              tb_order_id: body._order_id,
               terminal: 0,
               tb_order_item_id: item.id,
               tb_stock_list_id: item.tb_stock_list_id,
@@ -583,12 +616,12 @@ class OrderSaleController extends Base {
               direction: "S",
               tb_merchandise_id: item.tb_product_id,
               quantity: item.quantity,
-              operation: "Ajuste"
+              operation: "OrderSale"
             };
             //Quanto o insert é mais complexo como create precisa do no loop          
-            stockStatement.insert(dataItem);
+            await stockStatement.insert(dataItem);
           };
-          order.updateStatus(body.tb_institution_id, body.id, 'F');
+          await orderController.updateStatus(body.tb_institution_id, body.tb_user_id, body.tb_order_id, 'F');
           resolve("200");
         } else {
           resolve("201");
@@ -603,15 +636,15 @@ class OrderSaleController extends Base {
   static async reopen(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        var status = this.getStatus(body.tb_institution_id, body.id);
-        if (status == 'F') {
-          var items = orderItem.getList(body.tb_institution_id, body.id);
+        var dataOrder = await this.getOrder(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
+        if (dataOrder.status == 'F') {
+          var items = await orderItemController.getList(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
           var dataItem = {};
           for (var item of items) {
             dataItem = {
               id: 0,
               tb_institution_id: body.tb_institution_id,
-              tb_order_id: body.id,
+              tb_order_id: body.tb_order_id,
               terminal: 0,
               tb_order_item_id: item.id,
               tb_stock_list_id: item.tb_stock_list_id,
@@ -621,12 +654,12 @@ class OrderSaleController extends Base {
               direction: "E",
               tb_merchandise_id: item.tb_product_id,
               quantity: item.quantity,
-              operation: "Ajuste"
+              operation: "OrderSale"
             };
             //Quanto o insert é mais complexo como create precisa do no loop          
-            stockStatement.insert(dataItem);
+            await stockStatement.insert(dataItem);
           };
-          order.updateStatus(body.tb_institution_id, body.id, 'A');
+          await orderController.updateStatus(body.tb_institution_id, body.tb_user_id, body.tb_order_id, 'A');
           resolve("200");
         } else {
           resolve("201");
@@ -760,7 +793,7 @@ class OrderSaleController extends Base {
   static async closurebyCard(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        var items = this.getItemList(body.order.tb_institution_id, body.order.id);
+        var items = await this.getItemList(body.order.tb_institution_id, body.order.id);
         var dataItem = {};
         for (var item of items) {
           dataItem = {

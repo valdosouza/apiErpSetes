@@ -342,7 +342,16 @@ class CustomerController extends Base {
       '  inner join tb_person pe ' +
       '  on (pe.id = et.id) ' +
       'where ct.tb_institution_id =? ' +
-      ' and (tb_salesman_id = ? ) '+
+      ' and (tb_salesman_id = ? ) ';
+
+      if (body.name_customer != "") {
+        nick_trade = '%' + body.name_customer + '%';
+        sqltxt += ' and (et.nick_trade like ? ) ';
+      } else {
+        nick_trade = "";
+        sqltxt += ' and (et.nick_trade <> ?) ';
+      }
+      sqltxt +=      
       'union ' +
       'Select  ' +
       'et.id,  ' +
@@ -357,11 +366,9 @@ class CustomerController extends Base {
       '  on (co.id = et.id) ' +
       'where ct.tb_institution_id =? '+
       ' and (tb_salesman_id = ? ) ';
-      if (body.name_customer != "") {
-        nick_trade = '%' + body.name_customer + '%';
+      if (body.name_customer != "") {        
         sqltxt += ' and (et.nick_trade like ? ) ';
       } else {
-        nick_trade = "";
         sqltxt += ' and (et.nick_trade <> ?) ';
       }
       sqltxt +=
@@ -371,7 +378,7 @@ class CustomerController extends Base {
       Tb.sequelize.query(
         sqltxt,
         {
-          replacements: [body.tb_institution_id,body.tb_salesman_id, body.tb_institution_id,body.tb_salesman_id,nick_trade],
+          replacements: [body.tb_institution_id,body.tb_salesman_id,nick_trade, body.tb_institution_id,body.tb_salesman_id,nick_trade],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           resolve(data);

@@ -100,7 +100,7 @@ class OrderBillingController extends Base {
     return promise;
   }
 
-  static get(tb_institution_id, id) {
+  static get(tb_institution_id,tb_salesman_id, id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         'Select ' +
@@ -110,12 +110,17 @@ class OrderBillingController extends Base {
         'orb.deadline, ' +
         'orb.plots ' +
         'From tb_order_billing orb ' +
+        '  inner join tb_order ord '+
+        '  on (ord.id = orb.id) '+
+        '    and (ord.tb_institution_id = orb.tb_institution_id) '+
+        '    and (ord.terminal = orb.terminal) '+        
         '  inner join tb_payment_types pmt ' +
         '  on (pmt.id = orb.tb_payment_types_id) ' +
         'where (orb.tb_institution_id =? )' +
+        ' and (ord.tb_user_id =? )'+
         ' and (orb.id = ?)',
         {
-          replacements: [tb_institution_id, id],
+          replacements: [tb_institution_id, tb_salesman_id, id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           if (data.length > 0) {

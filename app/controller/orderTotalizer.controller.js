@@ -100,23 +100,28 @@ class OrderTotalizerController extends Base {
     return promise;
   }  
 
-  static get(tb_institution_id, id) {
+  static get(tb_institution_id,tb_salesman_id, id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         'Select '+
-        'items_qtde, '+
-        'product_qtde, '+
-        'product_value, '+
-        'ipi_value, '+
-        'discount_aliquot, '+
-        'discount_value, '+
-        'expenses_value, '+
-        'total_value '+
-        'From tb_order_totalizer '+
-        'where (tb_institution_id =? )'+
-        ' and (id = ?)',
+        'ort.items_qtde, '+
+        'ort.product_qtde, '+
+        'ort.product_value, '+
+        'ort.ipi_value, '+
+        'ort.discount_aliquot, '+
+        'ort.discount_value, '+
+        'ort.expenses_value, '+
+        'ort.total_value '+
+        'From tb_order_totalizer ort '+
+        '  inner join tb_order ord '+
+        '  on (ord.id = ort.id) '+
+        '    and (ord.tb_institution_id = ort.tb_institution_id) '+
+        '    and (ord.terminal = ort.terminal) '+          
+        'where (ord.tb_institution_id =? )'+
+        ' and (ord.tb_user_id = ?) '+
+        ' and (ord.id = ?)',
         {
-          replacements: [tb_institution_id, id],
+          replacements: [tb_institution_id,tb_salesman_id, id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           if (data.length > 0){

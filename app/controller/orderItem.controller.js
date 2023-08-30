@@ -104,7 +104,7 @@ class OrderItemController extends Base {
     return promise;
   }
 
-  static getList(tb_institution_id, tb_order_id) {
+  static getList(tb_institution_id,tb_salesman_id, tb_order_id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         'SELECT ' +
@@ -122,13 +122,18 @@ class OrderItemController extends Base {
         'ori.discount_value, ' +
         'ori.tb_price_list_id ' +
         'from tb_order_item  ori ' +
+        '  inner join tb_order ord '+
+        '  on (ord.id = ori.tb_order_id) '+
+        '    and (ord.tb_institution_id = ori.tb_institution_id) '+
+        '    and (ord.terminal = ori.terminal) '+             
         '  inner join tb_product prd ' +
         '  on (prd.id = ori.tb_product_id) ' +
         '  and (prd.tb_institution_id = ori.tb_institution_id) ' +
         'where ori.tb_institution_id = ? ' +
+        ' and (ord.tb_user_id = ?) '+
         'and ori.tb_order_id = ?  ',
         {
-          replacements: [tb_institution_id, tb_order_id],
+          replacements: [tb_institution_id, tb_salesman_id, tb_order_id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           var dataResult = [];          

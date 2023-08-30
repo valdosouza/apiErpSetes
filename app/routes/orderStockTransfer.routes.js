@@ -10,25 +10,13 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * @swagger
  * components:
  *   schemas:
- *     OrderStockTransfer:
+ *     orderStockTransfer:
  *       type: object
- *       required:
- *         - id
- *         - tb_institution_id
- *         - tb_user_id
- *         - tb_entity_id
- *         - dt_record
- *         - status
- *         - tb_stock_list_id_ori
  *       properties:
  *         id:
  *           type: integer
  *         tb_institution_id:
  *           type: integer
- *         tb_user_id:
- *           type: integer
- *         dt_record:
- *           type: string
  *         number:
  *           type: integer
  *         tb_entity_id:
@@ -43,69 +31,19 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *           type: integer
  *         name_stock_list_des:
  *           type: string
- *         note:
- *           type: string 
- *         status:
- *           type: string
- *  
- *     OrderStockTransferList:
- *       type: object
- *       properties:
- *         id:
- *           type: integer
- *         tb_user_id:
- *           type: integer
- *         dt_record:
- *           type: string
- *         number:
- *           type: integer
- *         tb_entity_id:
- *           type: integer
- *         name_entity:
- *           type: string 
- *         status:
- *           type: string
- * 
- *     OrderStockTransferItem:
- *       type: object
- *       required:
- *         - tb_product_id
- *         - unit_value
- *         - quantity
- *       properties:
- *         tb_product_id:
- *           type: integer
- *         name_product:
- *           type: string
- *         unit_value:
- *           type: number
- *         quantity:
- *           type: number
- * 
- *     OrderStockAdOperation:
- *       type: object
- *       required:
- *         - tb_institution_id
- *         - tb_order_id 
- *         - dt_record
- *         - direction 
- *       properties:
- *         tb_institution_id:
- *           type: integer
- *         id:
- *           type: integer
- *         dt_record:
- *           type: string 
  *
- *     OrderStockTransferMain:
+ * 
+ *     objOrderStockTransfer:
  *       type: object
  *       properties:
- *         Order:
- *           $ref: '#/components/schemas/OrderStockTransfer'
- *         Items:
+ *         order:
+ *           $ref: '#/components/schemas/order'
+ *         stock_transfer:
+ *           $ref: '#/components/schemas/orderStockTransfer'
+ *         items:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/OrderStockTransferItem'
+ *              $ref: '#/components/schemas/orderItems'
  */
  
  
@@ -127,14 +65,14 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/OrderStockTransferMain'
+ *             $ref: '#/components/schemas/objOrderStockTransfer'
  *     responses:
  *       200:
  *         description: The OrderStockTransfer was successfully created
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/OrderStockTransferMain'
+ *               $ref: '#/components/schemas/orderStockTransfer'
  *       500:
  *         description: Some server error
  */
@@ -143,32 +81,32 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
 
  /**
  * @swagger
- * /orderstocktransfer/getlist/{tb_institution_id}:
- *   get:
- *     summary: Returns the list of all the OrderStockTransfers
+ * /orderstocktransfer/getlist/:
+ *   post:
+ *     summary: Returns the list of all the OrderStockTransfer
  *     tags: [OrderStockTransfer]
- *     parameters:
- *      - in: path
- *        name: tb_institution_id
- *        schema:
- *          type: string
- *        required: true
- *        description: The orderstocktransfer tb_institution_id
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/orderParams'
  *     responses:
  *       200:
- *         description: The list of the StockTransfer
+ *         description: The list of the payment types
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/OrderStockTransferList'
+ *                 $ref: '#/components/schemas/orderStockTransfer'
  */
-  //router.get("/getlist/:tb_institution_id", orderstocktransfer.getList);
-  protectedRouter.get("/getlist/:tb_institution_id", orderstocktransfer.getList);
+ router.post("/getlist/", orderstocktransfer.getList);
+ //protectedRouter.get("/getlist/:tb_institution_id", orderstocktransfer.getList);
+
+
 /**
  * @swagger
- * /orderstocktransfer/get/{tb_institution_id}/{id}:
+ * /orderstocktransfer/get/{tb_institution_id}/{tb_user_id}/{tb_order_id}:
  *   get:
  *     summary: Returns the OrderStockTransfer
  *     tags: [OrderStockTransfer]
@@ -176,21 +114,20 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *      - in: path
  *        name: tb_institution_id
  *      - in: path
- *        name: id
- *        schema:
- *          type: string
- *        required: true
- *        description: The Order Stocktransfer by tb_institution_id and id
+ *        name: tb_user_id
+ *      - in: path
+ *        name: tb_order_id 
  *     responses:
  *       200:
  *         description: The OrderStockTransfer
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/OrderStockTransferMain'
+ *               $ref: '#/components/schemas/objOrderStockTransfer'
  */
   //router.get("/get/:tb_institution_id/:id", orderstocktransfer.get);
-  protectedRouter.get("/get/:tb_institution_id/:id", orderstocktransfer.get);
+  protectedRouter.get("/get/:tb_institution_id/:tb_user_id/:tb_order_id", orderstocktransfer.get);
+
  /**
  * @swagger
  * /orderstocktransfer:
@@ -202,14 +139,13 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *      content:
  *        application/json:
  *          schema:
- *            $ref: '#/components/schemas/OrderStockTransferMain'
+ *            $ref: '#/components/schemas/objOrderStockTransfer'
  *    responses:
  *      200:
- *        description: The OrderStockTransfer was updated
  *        content:
  *          application/json:
  *            schema:
- *              $ref: '#/components/schemas/OrderStockTransferMain'
+ *              $ref: '#/components/schemas/orderStockTransfer'
  *      404:
  *        description: The orderstocktransfer was not found
  *      500:
@@ -234,7 +170,10 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *        description: The orderstocktransfer id
  *    responses:
  *      200:
- *        description: The OrderStockTransfer was deleted
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/components/schemas/orderResulAction'
  *      404:
  *        description: The orderstocktransfer was not found
  *      500:
@@ -242,6 +181,8 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  */
   //router.delete("/:tb_institution_id/:id", orderstocktransfer.delete);
   protectedRouter.delete("/:tb_institution_id/:id", orderstocktransfer.delete);
+
+
 /**
  * @swagger
  * /orderstocktransfer/closure:
@@ -253,10 +194,13 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/OrderStockAdOperation'
+ *             $ref: '#/components/schemas/orderAction'
  *     responses:
  *       200:
- *         description: The OrderStockTransfer was closed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/orderResulAction'
  *       201:
  *         description: The OrderStockTransfer is already closed
  *       404:
@@ -277,10 +221,13 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
   *       content:
   *         application/json:
   *           schema:
-  *             $ref: '#/components/schemas/OrderStockAdOperation'
+  *             $ref: '#/components/schemas/orderAction'
   *     responses:
   *       200:
-  *         description: The OrderStockTransfer was open
+  *         content:
+  *           application/json:
+  *             schema:
+  *               $ref: '#/components/schemas/orderResulAction'
   *       201:
   *         description: The OrderStockTransfer is already open
   *       404:
@@ -290,4 +237,5 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
   */
   //router.post("/reopen/", orderstocktransfer.reopen);     
   protectedRouter.post("/reopen/", orderstocktransfer.reopen);     
+
 module.exports = router;

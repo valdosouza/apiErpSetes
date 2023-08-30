@@ -144,7 +144,7 @@ class OrderController extends Base {
     return promise;
   }
 
-  static get(tb_institution_id, id) {
+  static get(tb_institution_id, tb_user_id, id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         '  select ' +
@@ -162,9 +162,10 @@ class OrderController extends Base {
         '   inner join tb_person pusr ' +
         '   on (pusr.id = ord.tb_user_id)  ' +
         'where (ord.tb_institution_id =? ) ' +
+        ' and (tb_user_id =?) ' +
         ' and (ord.id =? )',
         {
-          replacements: [tb_institution_id, id],
+          replacements: [tb_institution_id, tb_user_id, id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           if (data.length > 0) {
@@ -180,21 +181,25 @@ class OrderController extends Base {
     return promise;
   }
 
-  static async updateStatus(tb_institution_id, id, status) {
+  static async updateStatus(tb_institution_id, tb_user_id, id, status) {
     const promise = new Promise(async (resolve, reject) => {
-      Tb.update({ status: status }, {
-        where: {
-          id: id,
-          tb_institution_id: tb_institution_id,
-          terminal: 0
-        }
-      })
-        .then((data) => {
-          resolve(data);
+      try {
+        Tb.update({ status: status }, {
+          where: {
+            id: id,
+            tb_institution_id: tb_institution_id,
+            tb_user_id: tb_user_id,
+            terminal: 0
+          }
         })
-        .catch(err => {
-          reject("order.updateStatus:" + err);
-        });
+          .then((data) => {
+            console.log(data);
+            resolve(data);
+          })
+
+      } catch (error) {
+        reject("order.updateStatus:" + error);
+      }
     });
     return promise;
   }
@@ -218,7 +223,7 @@ class OrderController extends Base {
     return promise;
   }
 
-  static async delete(tb_institution_id,id) {
+  static async delete(tb_institution_id, id) {
     const promise = new Promise((resolve, reject) => {
       try {
         const dataSale = {
@@ -227,7 +232,6 @@ class OrderController extends Base {
           terminal: 0,
           status: 'D',
         }
-        console.log(dataSale);
         Tb.update(dataSale, {
           where: {
             id: dataSale.id,
