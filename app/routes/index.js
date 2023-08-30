@@ -107,7 +107,7 @@ routes.use("/ordersale", ordersale);
 const orderpurchase = require("../routes/orderPurchase.routes");
 routes.use("/orderpurchase", orderpurchase);
 
-const invoiceMerchandise = require("../routes/invoicemerchandise.routes");
+const invoiceMerchandise = require("../routes/invoiceMerchandise.routes");
 routes.use("/invoicemerchandise", invoiceMerchandise);
 
 const orderconsignment = require("../routes/orderConsignment.routes");
