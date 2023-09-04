@@ -29,9 +29,9 @@ class StockListEndPoint {
   }
 
   static getList(req, res) {
-    const tb_institution_id = req.params.tb_institution_id;
-
-    StockListController.getList(tb_institution_id).then(data => {
+    
+    StockListController.getList(req.body)
+    .then(data => {
       res.send(data);
     })
   }

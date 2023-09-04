@@ -62,7 +62,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * 
  *  
  * 
- *     orderParams:
+ *     orderSaleParams:
  *       type: object
  *       properties:
  *         page:
@@ -191,7 +191,7 @@ router.delete("/", ordersale.delete);
 *       content:
 *         application/json:
 *           schema:
-*             $ref: '#/components/schemas/orderParams'
+*             $ref: '#/components/schemas/orderSaleParams'
 *     responses:
 *       200:
 *         description: The list of the payment types

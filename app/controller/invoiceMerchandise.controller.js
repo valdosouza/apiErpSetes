@@ -30,7 +30,7 @@ class InvoiceMerchandiseController extends Base {
           }
         })
         .catch(err => {
-          reject('orderSale.getNexNumber: ' + err);
+          reject('invoiceMerchandise.getNexNumber: ' + err);
         });
     });
     return promise;

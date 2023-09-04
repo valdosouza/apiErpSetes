@@ -7,16 +7,18 @@ const orderTotalizer = require('./orderTotalizer.controller.js');
 const orderItemController = require('./orderItem.controller.js');
 const fiscalController = require('./fiscal.controller.js');
 const stockStatement = require('./stockStatement.controller.js');
+const EntityHasStockListController = require('./entityHasStockList.controller.js');
 
 class OrderSaleController extends Base {
-  static async getNextNumber(tb_institution_id) {
+  static async getNextNumber(tb_institution_id,terminal) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         'Select max(number) lastNumber ' +
         'from tb_order_sale ' +
-        'WHERE ( tb_institution_id =? ) ',
+        'WHERE ( tb_institution_id =? ) '+
+        ' and (terminal =?) ',
         {
-          replacements: [tb_institution_id],
+          replacements: [tb_institution_id,terminal],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           var nextNumber = 1;
@@ -103,7 +105,7 @@ class OrderSaleController extends Base {
     const promise = new Promise(async (resolve, reject) => {
 
       if (body.sale.number == 0)
-        body.sale.number = await this.getNextNumber(body.order.tb_institution_id);
+        body.sale.number = await this.getNextNumber(body.order.tb_institution_id,0);
 
       const dataOrder = {
         id: body.order.id,
@@ -227,6 +229,7 @@ class OrderSaleController extends Base {
           '   inner join tb_person pslm ' +
           '   on (pslm.id  = slm.id)     ' +
           'where (ord.tb_institution_id =? )  ' +
+          '  and (ord.terminal = ?) '+
           'and (ors.tb_salesman_id = ?) ' +
           ' AND (ord.status <> ?) ';
 
@@ -265,6 +268,7 @@ class OrderSaleController extends Base {
           '   inner join tb_person pslm ' +
           '   on (pslm.id  = slm.id)     ' +
           'where (ord.tb_institution_id =? )  ' +
+          '  and (ord.terminal = ?) '+
           'and (ors.tb_salesman_id = ?) ' +
           ' AND (ord.status <> ?) ';
         if (body.nick_trade != "") {
@@ -280,7 +284,7 @@ class OrderSaleController extends Base {
         Tb.sequelize.query(
           sqltxt,
           {
-            replacements: [body.tb_institution_id, body.tb_salesman_id, 'D', nick_trade, body.tb_institution_id, body.tb_salesman_id, 'D', nick_trade],
+            replacements: [body.tb_institution_id, 0, body.tb_salesman_id, 'D', nick_trade, body.tb_institution_id,0, body.tb_salesman_id, 'D', nick_trade],
             type: Tb.sequelize.QueryTypes.SELECT
           }).then(data => {
             resolve(data);
@@ -506,6 +510,7 @@ class OrderSaleController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var dataItem = {};
+        var stock = await await EntityHasStockListController.getByEntity(body.order.tb_institution_id, body.sale.tb_salesman_id);
         for (var item of body.items) {
           if (item.updateStatus != "") {
             dataItem = {
@@ -513,16 +518,18 @@ class OrderSaleController extends Base {
               tb_institution_id: body.order.tb_institution_id,
               tb_order_id: body.order.id,
               terminal: body.order.terminal,
-              tb_stock_list_id: item.tb_stock_list_id,
+              tb_stock_list_id: stock[0].tb_stock_list_id,
               tb_price_list_id: item.tb_price_list_id,
               tb_product_id: item.tb_product_id,
               quantity: item.quantity,
               unit_value: item.unit_value,
               kind: 'Sale',
             };
+            console.log(dataItem);
             //Quanto o insert é mais complexo como getNext precisa do no loop              
             switch (item.update_status) {
               case "I":
+                
                 await orderItemController.insert(dataItem)
                   .then(data => {
                     item.id = data.id;

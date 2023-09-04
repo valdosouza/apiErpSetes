@@ -8,22 +8,22 @@ const stockStatement = require('./stockStatement.controller.js');
 const OrderItemController = require('./orderItem.controller.js');
 
 class OrderStockTransferController extends Base {
-  static async getNextNumber(tb_institution_id) {
+  static async getNextNumber(tb_institution_id, terminal) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         'Select max(number) lastNumber ' +
         'from tb_order_stock_transfer ' +
-        'WHERE ( tb_institution_id =? ) ',
+        'WHERE ( tb_institution_id =? ) ' +
+        ' and (terminal =?)',
         {
-          replacements: [tb_institution_id],
+          replacements: [tb_institution_id, terminal],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
-          if (data) {
-            const nextNumber = data[0].lastNumber + 1;
-            resolve(nextNumber);
-          } else {
-            resolve(1);
+          var nextNumber = 1;
+          if (data.length > 0) {
+            nextNumber = data[0].lastNumber + 1;
           }
+          resolve(nextNumber);          
         })
         .catch(err => {
           reject('orderStockTransfer.getNexNumber: ' + err);
@@ -52,14 +52,14 @@ class OrderStockTransferController extends Base {
         dataOrder.tb_stock_list_id_ori = stockOrigem[0].tb_stock_list_id;
         var stockDestino = await EntityHasStockListController.getByEntity(body.order.tb_institution_id, body.order.tb_user_id);
         dataOrder.tb_stock_list_id_des = stockDestino[0].tb_stock_list_id;
-        stockStatement.get
+
         Tb.create(dataOrder)
           .then(() => {
             resolve(body);
           })
 
       } catch (error) {
-        reject("orderSale.insertOrder:" + error);
+        reject("orderStockTransfer.insertOrder:" + error);
       }
     });
     return promise;
@@ -146,6 +146,7 @@ class OrderStockTransferController extends Base {
         '   on (std.id  = ora.tb_stock_list_id_des) ' +
         '     and (std.tb_institution_id  = ora.tb_institution_id) ' +
         'where (ord.tb_institution_id =? ) ' +
+        '  and (ord.terminal = ?) ' +
         ' AND (ord.tb_user_id = ?) ';
       ' AND (ord.status <> ?) ';
 
@@ -158,12 +159,12 @@ class OrderStockTransferController extends Base {
       }
       sqltxt +=
         ' order by nick_trade ' +
-        ' limit ' + ((body.page - 1) * 20) + ',20 ';   
+        ' limit ' + ((body.page - 1) * 20) + ',20 ';
 
       Tb.sequelize.query(
         sqltxt,
         {
-          replacements: [body.tb_institution_id, body.tb_salesman_id, 'D', nick_trade],
+          replacements: [body.tb_institution_id, 0, body.tb_salesman_id, 'D', nick_trade],
 
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
@@ -211,7 +212,7 @@ class OrderStockTransferController extends Base {
     return promise;
   }
 
-  static async getOrder(tb_institution_id,tb_user_id, id) {
+  static async getOrder(tb_institution_id, tb_user_id, id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         '  select ' +
@@ -242,10 +243,10 @@ class OrderStockTransferController extends Base {
         '   on (std.id  = ora.tb_stock_list_id_des) ' +
         '     and (std.tb_institution_id  = ora.tb_institution_id) ' +
         'where (ord.tb_institution_id =? ) ' +
-        ' and (ord.tb_user_id = ?)'+
+        ' and (ord.tb_user_id = ?)' +
         ' and (ord.id =? )',
         {
-          replacements: [tb_institution_id,tb_user_id, id],
+          replacements: [tb_institution_id, tb_user_id, id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           resolve(data[0]);
@@ -257,7 +258,7 @@ class OrderStockTransferController extends Base {
     return promise;
   }
 
-  static get = (tb_institution_id,tb_user_id,tb_order_id) => {
+  static get = (tb_institution_id, tb_user_id, tb_order_id) => {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var result = {};
@@ -268,7 +269,7 @@ class OrderStockTransferController extends Base {
         const dataStockTransfer = await this.getOrder(tb_institution_id, tb_user_id, tb_order_id);
         result.stock_transfer = dataStockTransfer;
 
-        const dataItems = await OrderItemController.getList(tb_institution_id,tb_user_id, tb_order_id);
+        const dataItems = await OrderItemController.getList(tb_institution_id, tb_user_id, tb_order_id);
         result.items = dataItems;
 
         resolve(result);
@@ -288,9 +289,9 @@ class OrderStockTransferController extends Base {
         terminal: 0,
         tb_user_id: body.order.tb_user_id,
         tb_entity_id: body.stock_transfer.tb_entity_id,
-        number : body.stock_transfer.number,
-        tb_stock_list_id_ori : body.stock_transfer.tb_stock_list_id_ori,
-        tb_stock_list_id_des : body.stock_transfer.tb_stock_list_id_des,
+        number: body.stock_transfer.number,
+        tb_stock_list_id_ori: body.stock_transfer.tb_stock_list_id_ori,
+        tb_stock_list_id_des: body.stock_transfer.tb_stock_list_id_des,
       }
       Tb.update(dataOrderStockAdjust, {
         where: {
@@ -312,15 +313,15 @@ class OrderStockTransferController extends Base {
   static async updateOrderItem(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-
         var dataItem = {};
+        var stock = await await EntityHasStockListController.getByEntity(body.order.tb_institution_id, body.sale.tb_salesman_id);
         for (var item of body.items) {
           dataItem = {
             id: item.id,
             tb_institution_id: body.order.tb_institution_id,
             tb_order_id: body.order.id,
             terminal: 0,
-            tb_stock_list_id: item.tb_stock_list_id,
+            tb_stock_list_id: stock[0].tb_stock_list_id,
             tb_product_id: item.tb_product_id,
             quantity: item.quantity,
             unit_value: item.unit_value,
@@ -389,7 +390,7 @@ class OrderStockTransferController extends Base {
   static async closure(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        var dataOrder = await this.getOrder(body.tb_institution_id,body.tb_user_id, body.tb_order_id);
+        var dataOrder = await this.getOrder(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
         if (dataOrder.status == 'A') {
           var items = await OrderItemController.getList(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
 
@@ -419,7 +420,7 @@ class OrderStockTransferController extends Base {
             dataItem['direction'] = 'E';
             await stockStatement.insert(dataItem);
           };
-          await orderController.updateStatus(body.tb_institution_id,body.tb_user_id, body.tb_order_id, 'F');
+          await orderController.updateStatus(body.tb_institution_id, body.tb_user_id, body.tb_order_id, 'F');
           resolve("200");
         } else {
           resolve("201");
@@ -463,7 +464,7 @@ class OrderStockTransferController extends Base {
             dataItem['direction'] = 'S';
             await stockStatement.insert(dataItem);
           };
-          await orderController.updateStatus(body.tb_institution_id,body.tb_user_id, body.tb_order_id, 'A');
+          await orderController.updateStatus(body.tb_institution_id, body.tb_user_id, body.tb_order_id, 'A');
           resolve("200");
         } else {
           resolve("201");

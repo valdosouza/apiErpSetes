@@ -193,7 +193,6 @@ class OrderController extends Base {
           }
         })
           .then((data) => {
-            console.log(data);
             resolve(data);
           })
 

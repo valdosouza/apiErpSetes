@@ -2,6 +2,12 @@ const Base = require('./base.controller.js');
 const db = require("../model");
 const Tb = db.collaborator;
 const fiscalController = require('./fiscal.controller.js');
+const entityController = require('./entity.controller.js');
+const companyController = require('./company.controller.js');
+const personController = require('./person.controller.js');
+const addressController = require('./address.controller.js');
+const phoneController = require('./phone.controller.js');
+const userController = require('./user.controller.js');
 
 class CollaboratorController extends Base {
 
@@ -272,29 +278,31 @@ class CollaboratorController extends Base {
   static get = (tb_institution_id, id) => {
     const promise = new Promise(async (resolve, reject) => {
       try {
+        
         var result = {};
         const dataCollaborator = await this.getById(tb_institution_id, id);
-        result.collaborator = dataCollaborator[0];
-        const dataEntity = await entity.getById(id);
+        result.collaborator = dataCollaborator;
+        
+        const dataEntity = await entityController.getById(id);
         result.entity = dataEntity;
-
-        const dataPerson = await person.getById(id);
+        
+        const dataPerson = await personController.getById(id);
         if (dataPerson.id > 0) {
           result.person = dataPerson;
         }
-        const dataCompany = await company.getById(id);
+        const dataCompany = await companyController.getById(id);
         if (dataCompany.id > 0) {
           result.company = dataCompany;
         }
-        const dataAddress = await address.getById(id);
+        const dataAddress = await addressController.getById(id);
         result.address = dataAddress;
 
-        const dataPhone = await phone.getById(id, 'Comercial');
+        const dataPhone = await phoneController.getByKey(id, 'Comercial');
         result.phone = dataPhone;
 
-        const userEmail = await user.getEmailByEntity(id);
+        const userEmail = await userController.getEmailByEntity(id);
         result.user = { email: userEmail };
-
+        
         resolve(result);
       }
       catch (err) {

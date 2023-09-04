@@ -216,10 +216,13 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/OrderStockAdOperation'
+ *             $ref: '#/components/schemas/orderAction'
  *     responses:
  *       200:
- *         description: The OrderProduction was closed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/orderResulAction'
  *       201:
  *         description: The OrderProduction is already closed
  *       404:
@@ -240,10 +243,13 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
   *       content:
   *         application/json:
   *           schema:
-  *             $ref: '#/components/schemas/OrderStockAdOperation'
+  *             $ref: '#/components/schemas/orderAction'
   *     responses:
   *       200:
-  *         description: The OrderProduction was open
+  *         content:
+  *           application/json:
+  *             schema:
+  *               $ref: '#/components/schemas/orderResulAction'
   *       201:
   *         description: The OrderProduction is already open
   *       404:

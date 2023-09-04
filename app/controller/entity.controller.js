@@ -8,7 +8,7 @@ class EntityController extends Base {
 
   static async sync(body) {
     const promise = new Promise(async (resolve, reject) => {
-      try {        
+      try {
         await Tb.update(body.entity, {
           where: {
             id: body.entity.id
@@ -83,7 +83,7 @@ class EntityController extends Base {
       delete entity.name_linebusiness;
       if (entity.aniversary == '')
         delete entity.aniversary;
-        entity.id = await this.getIdNext();
+      entity.id = await this.getIdNext();
       Tb.create(entity)
         .then((data) => {
           resolve(data);
@@ -95,23 +95,39 @@ class EntityController extends Base {
     return promise;
   }
 
-  static getList(tb_institution_id) {
+  static getList(body) {
     const promise = new Promise((resolve, reject) => {
-      Tb.sequelize.query(
+      var nick_trade = "";
+      var sqltxt =
         'select  e.* ' +
         'from tb_entity e ' +
         '   inner join tb_institution_has_entity ihe ' +
         '   on (ihe.tb_entity_id = e.id) ' +
-        'where (ihe.tb_institution_id = ?) ',
-        {
-          replacements: [tb_institution_id],
-          type: Tb.sequelize.QueryTypes.SELECT
-        }).then(data => {
-          resolve(data);
-        })
-        .catch(err => {
-          reject(new Error("Entity:" + err));
-        });
+        'where (ihe.tb_institution_id = ?) ';
+
+      if (body.name_entity != "") {
+        nick_trade = '%' + body.name_entity + '%';
+        sqltxt += ' and (e.nick_trade like ? ) ';
+      } else {
+        nick_trade = "";
+        sqltxt += ' and (e.nick_trade <> ?) ';
+      }
+      sqltxt +=
+        ' order by nick_trade ' +
+        ' limit ' + ((body.page - 1) * 20) + ',20 ';
+
+      try {
+        Tb.sequelize.query(
+          sqltxt,
+          {
+            replacements: [body.tb_institution_id, nick_trade],
+            type: Tb.sequelize.QueryTypes.SELECT
+          }).then(data => {
+            resolve(data);
+          })
+      } catch (error) {
+        reject('entity.controller.getList: $error');
+      }
     });
     return promise;
   }

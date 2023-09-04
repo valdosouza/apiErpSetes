@@ -78,20 +78,6 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *         quantity:
  *           type: number
  * 
- *     OrderStockAdOperation:
- *       type: object
- *       required:
- *         - tb_institution_id
- *         - tb_order_id 
- *         - dt_record
- *         - direction 
- *       properties:
- *         tb_institution_id:
- *           type: integer
- *         id:
- *           type: integer
- *         dt_record:
- *           type: string 
  *
  *     OrderBonusMain:
  *       type: object
@@ -249,10 +235,13 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/OrderStockAdOperation'
+ *             $ref: '#/components/schemas/orderAction'
  *     responses:
  *       200:
- *         description: The OrderBonus was closed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/orderResulAction'
  *       201:
  *         description: The OrderBonus is already closed
  *       404:
@@ -273,10 +262,13 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
   *       content:
   *         application/json:
   *           schema:
-  *             $ref: '#/components/schemas/OrderStockAdOperation'
+  *             $ref: '#/components/schemas/orderAction'
   *     responses:
   *       200:
-  *         description: The OrderBonus was open
+  *         content:
+  *           application/json:
+  *             schema:
+  *               $ref: '#/components/schemas/orderResulAction'
   *       201:
   *         description: The OrderBonus is already open
   *       404:

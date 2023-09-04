@@ -11,8 +11,13 @@ class EntityEndPoint {
   }
 
   static getList(req, res) {
-
-    EntityController.getList(req.params.tb_institution_id)
+    if (req.body.page == 0) {
+      res.status(400).send({
+        message: "Page não pode ser 0(Zero)"
+      });
+      return;
+    }
+    EntityController.getList(req.body)
     .then(data => {
       res.send(data);
     })

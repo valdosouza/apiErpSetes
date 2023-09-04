@@ -61,6 +61,31 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *           items:
  *             $ref: '#/components/schemas/phone'  
  * 
+ *     ListEntity:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         name_company:
+ *           type: string
+ *         nick_trade:
+ *           type: string
+ *         doc_type:
+ *           type: string
+ *         doc_number:
+ *           type: string
+ *  
+ *     entityParams:
+ *       type: object
+ *       properties:
+ *         page:
+ *           type: integer
+ *         tb_institution_id:
+ *           type: integer 
+ *         id:
+ *           type: integer
+ *         name_entity:
+ *           type: string  
  */
 
 
@@ -95,27 +120,29 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  */
  router.post("/", entity.create);
 
- /**
+/**
  * @swagger
- * /entity/getlist/{tb_institution_id}:
- *   get:
- *     summary: Returns the list of all the Entities
+ * /entity/getlist/:
+ *   post:
+ *     summary: Returns the list of all the Customers
  *     tags: [Entity]
- *     parameters:
- *      - in: path
- *        name: tb_institution_id
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/entityParams'
  *     responses:
  *       200:
- *         description: The list of the entities
+ *         description: The list of the customers
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/objEntity'
+ *                 $ref: '#/components/schemas/ListEntity'
  */
 
-router.get("/getlist/:tb_institution_id", entity.getList);
+router.post("/getlist/", entity.getList);
   
  /**
  * @swagger

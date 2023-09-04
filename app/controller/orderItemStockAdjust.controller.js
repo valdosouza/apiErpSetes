@@ -42,7 +42,7 @@ class OrderItemStockAdjustController extends Base {
             ' and (ori.tb_order_id =?) '+
             ' and (ori.kind =? )',
             { 
-              replacements: [tb_institution_id,tb_order_id,'StockAdjustment'],
+              replacements: [tb_institution_id,tb_order_id,'StockAdjust'],
               type: Tb.sequelize.QueryTypes.SELECT
             }).then(data => {
               resolve(data);

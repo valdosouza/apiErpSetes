@@ -55,14 +55,28 @@ class StockListController extends Base {
   }
 
 
-  static getList(tb_institution_id) {
+  static getList(body) {
     const promise = new Promise((resolve, reject) => {
+      var description = "";
+      var sqltxt =
+      'select  * ' +
+      'from tb_stock_list ' +
+      'where tb_institution_id=?';
+
+      if (body.description != "") {
+        description = '%' + body.description + '%';
+        sqltxt += ' and (description like ? ) ';
+      } else {
+        description = "";
+        sqltxt += ' and (description <> ?) ';
+      }
+      sqltxt +=
+        ' order by description ' +
+        ' limit ' + ((body.page - 1) * 20) + ',20 ';
       Tb.sequelize.query(
-        'select  * ' +
-        'from tb_stock_list ' +
-        'where tb_institution_id=?',
+        sqltxt,
         {
-          replacements: [tb_institution_id],
+          replacements: [body.tb_institution_id,description],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           resolve(data);

@@ -20,7 +20,7 @@ class StockBalanceController extends Base {
 
   static getList(body) {
     const promise = new Promise((resolve, reject) => {
-      var description = '';
+      var name_merchandise = '';
       var sqltxt =
         'select ' +
         'stb.tb_institution_id, ' +
@@ -40,11 +40,11 @@ class StockBalanceController extends Base {
         '  and stb.tb_stock_list_id =? ' +
         ' and (prd.active = ?)';
 
-      if (body.name_product != "") {
-        description = '%' + body.name_product + '%';
+      if (body.name_merchandise != "") {
+        name_merchandise = '%' + body.name_merchandise + '%';
         sqltxt += ' and (prd.description like ? ) ';
       } else {
-        description = '';
+        name_merchandise = '';
         sqltxt += ' and (prd.description <> ?) ';
       }
 
@@ -57,7 +57,7 @@ class StockBalanceController extends Base {
       Tb.sequelize.query(
         sqltxt,
         {
-          replacements: [body.tb_institution_id, body.tb_stock_list_id, 'S', description],
+          replacements: [body.tb_institution_id, body.tb_stock_list_id, 'S', name_merchandise],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           if (data.length > 0) {
@@ -73,7 +73,7 @@ class StockBalanceController extends Base {
               itemResult = {
                 tb_merchandise_id: item.tb_merchandise_id,
                 name_merchandise: item.name_merchandise,
-                quantity: item.quantity
+                quantity: Number(item.quantity)
               }
               items.push(itemResult);
             }
@@ -82,8 +82,8 @@ class StockBalanceController extends Base {
           } else {
             var dataResult = {
               id: 0,
-              tb_institution_id: tb_institution_id,
-              tb_stock_list_id: 0,
+              tb_institution_id: body.tb_institution_id,
+              tb_stock_list_id: body.tb_stock_list_id,
               name_stock_list: "",
             };
             var items = [];

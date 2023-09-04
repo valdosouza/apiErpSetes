@@ -29,6 +29,16 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *           type: string
  *         active:
  *           type: string 
+ * 
+ *     stockListParams:
+ *       type: object
+ *       properties:
+ *         page:
+ *           type: integer
+ *         tb_institution_id:
+ *           type: integer 
+ *         description:
+ *           type: string   
  */
 
  /**
@@ -90,32 +100,28 @@ router.post("/sync/", stocklist.sync);
  */
  router.post("/", stocklist.create);
 
- /**
+  /**
  * @swagger
- * /stocklist/getlist/{tb_institution_id}:
- *  get:
- *    summary: Return stocklist by the id
- *    tags: [StockList]
- *    parameters:
- *      - in: path
- *        name: tb_institution_id
- *        schema:
- *          type: string
- *        required: true
- *        description: The id Institutionr
- *    responses:
- *      200:
- *        description: The Stock was Listed
- *        content:
- *          application/json:
- *            schema:
- *              $ref: '#/components/schemas/StockList'
- *      404:
- *        description: The stock was not found
- *      500:
- *        description: Some error happened
+ * /stocklist/getlist/:
+ *   post:
+ *     summary: Returns the list of all stocks
+ *     tags: [StockList]
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/stockListParams'
+ *     responses:
+ *       200:
+ *         description: The list of the stocks
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/orderStockTransfer'
  */
-router.get("/getlist/:tb_institution_id", stocklist.getList);
+router.post("/getlist/", stocklist.getList);
   
 /**
  * @swagger

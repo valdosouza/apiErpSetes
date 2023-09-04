@@ -27,6 +27,12 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *           type: string
  *         doc_entity:
  *           type: string 
+ *         tb_stock_list_id:
+ *           type: integer 
+ *         name_stock_list:
+ *           type: string
+ *         direction:
+ *           type: string
  * 
  * 
  *     objOrderStockAdjust:
@@ -34,7 +40,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *       properties:
  *         order:
  *           $ref: '#/components/schemas/order'
- *         orderStockAdjust:
+ *         stock_adjust:
  *           $ref: '#/components/schemas/orderStockAdjust'
  *         totalizer:
  *           $ref: '#/components/schemas/orderTotalizer'
@@ -105,32 +111,30 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
 
  /**
  * @swagger
- * /orderstockadjust/getlist/{tb_institution_id}:
- *   get:
- *     summary: Returns the list of all the OrderStockAdjusts
+ * /orderstockadjust/getlist/:
+ *   post:
+ *     summary: Returns the list of all the OrderStockTransfer
  *     tags: [OrderStockAdjust]
- *     parameters:
- *      - in: path
- *        name: tb_institution_id
- *        schema:
- *          type: string
- *        required: true
- *        description: The orderstockadjust tb_institution_id
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/orderParams'
  *     responses:
  *       200:
- *         description: The list of the StockAdjust
+ *         description: The list of the payment types
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/OrderStockAdjustList'
- */  
-  protectedRouter.get("/getlist/:tb_institution_id", orderstockadjust.getList);
+ *                 $ref: '#/components/schemas/orderStockTransfer'
+ */
+  protectedRouter.post("/getlist/", orderstockadjust.getList); 
 
 /**
  * @swagger
- * /orderstockadjust/get/{tb_institution_id}/{id}:
+ * /orderstockadjust/get/{tb_institution_id}/{tb_user_id}/{tb_order_id}:
  *   get:
  *     summary: Returns the OrderStockAdjust
  *     tags: [OrderStockAdjust]
@@ -138,11 +142,9 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *      - in: path
  *        name: tb_institution_id
  *      - in: path
- *        name: id
- *        schema:
- *          type: string
- *        required: true
- *        description: The Order StockAdjust by tb_institution_id and id
+ *        name: tb_user_id
+ *      - in: path
+ *        name: tb_order_id
  *     responses:
  *       200:
  *         description: The OrderStockAdjust
@@ -151,7 +153,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *             schema:
  *               $ref: '#/components/schemas/objOrderStockAdjust'
  */
-  router.get("/get/:tb_institution_id/:id", orderstockadjust.get);
+  router.get("/get/:tb_institution_id/:tb_user_id/:tb_order_id", orderstockadjust.get);
   
  /**
  * @swagger
@@ -215,10 +217,13 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/OrderStockAdOperation'
+ *             $ref: '#/components/schemas/orderAction'
  *     responses:
  *       200:
- *         description: The OrderStockAdjust was closed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/orderResulAction'
  *       201:
  *         description: The OrderStockAdjust is already closed
  *       404:
@@ -239,10 +244,13 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
   *       content:
   *         application/json:
   *           schema:
-  *             $ref: '#/components/schemas/OrderStockAdOperation'
+  *             $ref: '#/components/schemas/orderAction'
   *     responses:
   *       200:
-  *         description: The OrderStockAdjust was open
+  *         content:
+  *           application/json:
+  *             schema:
+  *               $ref: '#/components/schemas/orderResulAction'
   *       201:
   *         description: The OrderStockAdjust is already open
   *       404:
