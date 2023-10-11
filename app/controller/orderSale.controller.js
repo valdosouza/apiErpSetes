@@ -10,15 +10,15 @@ const stockStatement = require('./stockStatement.controller.js');
 const EntityHasStockListController = require('./entityHasStockList.controller.js');
 
 class OrderSaleController extends Base {
-  static async getNextNumber(tb_institution_id,terminal) {
+  static async getNextNumber(tb_institution_id,tb_salesman_id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         'Select max(number) lastNumber ' +
         'from tb_order_sale ' +
-        'WHERE ( tb_institution_id =? ) '+
-        ' and (terminal =?) ',
+        'WHERE ( tb_institution_id =? ) '+                
+        ' and ( tb_salesman_id =?)',        
         {
-          replacements: [tb_institution_id,terminal],
+          replacements: [tb_institution_id,tb_salesman_id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           var nextNumber = 1;
@@ -105,7 +105,7 @@ class OrderSaleController extends Base {
     const promise = new Promise(async (resolve, reject) => {
 
       if (body.sale.number == 0)
-        body.sale.number = await this.getNextNumber(body.order.tb_institution_id,0);
+        body.sale.number = await this.getNextNumber(body.order.tb_institution_id,body.sale.tb_salesman_id);
 
       const dataOrder = {
         id: body.order.id,

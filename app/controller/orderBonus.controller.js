@@ -11,7 +11,7 @@ class OrderBonusController extends Base {
       Tb.sequelize.query(
         'Select max(number) lastNumber ' +
         'from tb_order_bonus ' +
-        'WHERE ( tb_institution_id =? ) ',
+        'WHERE ( tb_institution_id =? ) ',        
         {
           replacements: [tb_institution_id],
           type: Tb.sequelize.QueryTypes.SELECT

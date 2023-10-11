@@ -293,6 +293,7 @@ class OrderStockTransferController extends Base {
         tb_stock_list_id_ori: body.stock_transfer.tb_stock_list_id_ori,
         tb_stock_list_id_des: body.stock_transfer.tb_stock_list_id_des,
       }
+      
       Tb.update(dataOrderStockAdjust, {
         where: {
           id: dataOrderStockAdjust.id,
