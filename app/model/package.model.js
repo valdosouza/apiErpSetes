@@ -31,7 +31,7 @@ module.exports = sequelize => {
       comment: null,
       field: "abbreviation"
     },
-    created_at: {
+    createdAt: {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null,
@@ -40,7 +40,7 @@ module.exports = sequelize => {
       comment: null,
       field: "created_at"
     },
-    updated_at: {
+    updatedAt: {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null,
@@ -53,6 +53,7 @@ module.exports = sequelize => {
   const options = {
     tableName: "tb_package",
     comment: "",
+    timestamps : true,
     indexes: [{
       name: "updated_at",
       unique: false,

@@ -11,7 +11,7 @@ class MerchandiseController extends Base {
       try {
         product.sync(merchandise.product)
           .then(async () => {
-            //Brand
+            //Merchandise
             var regBrand = await brand.getbyDescription(merchandise.merchandise.name_brand);            
             merchandise.merchandise.tb_brand_id = regBrand.id;
             delete merchandise.merchandise.name_brand;
@@ -24,7 +24,8 @@ class MerchandiseController extends Base {
                          tb_institution_id: merchandise.merchandise.tb_institution_id
                         }
               })              
-            }
+            }            
+            await stock.sync(merchandise.stock);
             resolve({
               code: merchandise.product.id,
               id: 200,

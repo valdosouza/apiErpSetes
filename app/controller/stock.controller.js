@@ -25,12 +25,12 @@ class StockController extends Base {
         //stock.id = regColor.id;
         delete stock.name_color;
         //Sync
-        var regProd = await this.getById(stock.tb_institution_id, stock.id);
-        if (regProd.id == 0) {
+        var regProd = await this.getById(stock.tb_institution_id, stock.tb_merchandise_id);
+        if (regProd.tb_merchandise_id == 0) {
           Tb.create(stock);
         }else{
           Tb.update(stock, {
-            where: { tb_institution_id: stock.tb_institution_id, id: stock.id }
+            where: { tb_institution_id: stock.tb_institution_id, tb_merchandise_id: stock.tb_merchandise_id }
           })
         }
         resolve({
@@ -45,21 +45,21 @@ class StockController extends Base {
     return promise;
   }
 
-  static async getById(tb_institution_id, id) {
+  static async getById(tb_institution_id, tb_merchandise_id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         'select * ' +
         'from tb_stock ' +
         'where ( tb_institution_id =? ) ' +
-        ' and ( id=? )',
+        ' and ( tb_merchandise_id=? )',
         {
-          replacements: [tb_institution_id, id],
+          replacements: [tb_institution_id, tb_merchandise_id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {          
           if (data.length > 0){
             resolve(data[0]);
           }else{
-            resolve({id:0});
+            resolve({tb_merchandise_id:0});
           }
         })
         .catch(err => {

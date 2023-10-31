@@ -147,7 +147,7 @@ module.exports = sequelize => {
       comment: null,
       field: "composition"
     },
-    created_at: {
+    createdAt: {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null,
@@ -156,7 +156,7 @@ module.exports = sequelize => {
       comment: null,
       field: "created_at"
     },
-    updated_at: {
+    updatedAt: {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null,
@@ -169,6 +169,7 @@ module.exports = sequelize => {
   const options = {
     tableName: "tb_merchandise",
     comment: "",
+    timestamps:true,
     indexes: [{
       name: "tb_brand_id",
       unique: false,
@@ -179,11 +180,6 @@ module.exports = sequelize => {
       unique: false,
       type: "BTREE",
       fields: ["kind"]
-    }, {
-      name: "updated_at",
-      unique: false,
-      type: "BTREE",
-      fields: ["updated_at"]
     }]
   };
   const MerchandiseModel = sequelize.define("tb_merchandise_model", attributes, options);

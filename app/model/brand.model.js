@@ -22,16 +22,16 @@ module.exports = sequelize => {
       comment: null,
       field: "description"
     },
-    abbreviation: {
-      type: DataTypes.STRING(3),
+    tb_provider_id: {
+      type: DataTypes.INTEGER,
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
       comment: null,
-      field: "abbreviation"
+      field: "tb_provider_id"
     },
-    created_at: {
+    createdAt: {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null,
@@ -40,7 +40,7 @@ module.exports = sequelize => {
       comment: null,
       field: "created_at"
     },
-    updated_at: {
+    updatedAt: {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null,
@@ -51,8 +51,9 @@ module.exports = sequelize => {
     }
   };
   const options = {
-    tableName: "tb_package",
+    tableName: "tb_brand",
     comment: "",
+    timestamps: true,
     indexes: [{
       name: "updated_at",
       unique: false,
@@ -60,6 +61,6 @@ module.exports = sequelize => {
       fields: ["updated_at"]
     }]
   };
-  const PackageModel = sequelize.define("tb_package_model", attributes, options);
-  return PackageModel;
+  const BrandModel = sequelize.define("tb_brand_model", attributes, options);
+  return BrandModel;
 };

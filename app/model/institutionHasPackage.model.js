@@ -39,7 +39,7 @@ module.exports = sequelize => {
       comment: null,
       field: "active"
     },
-    created_at: {
+    createdAt: {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null,
@@ -48,7 +48,7 @@ module.exports = sequelize => {
       comment: null,
       field: "created_at"
     },
-    updated_at: {
+    updatedAt: {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null,
@@ -61,6 +61,7 @@ module.exports = sequelize => {
   const options = {
     tableName: "tb_institution_has_package",
     comment: "",
+    timesstamps:true,
     indexes: [{
       name: "tb_package_id",
       unique: false,

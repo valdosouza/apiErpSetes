@@ -27,7 +27,7 @@ class BrandController extends Base {
           replacements: [descripton],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
-          if (data[0] != null)
+          if (data.length > 0)
             resolve(data[0]);
           else
             resolve({id : 0});
@@ -43,11 +43,11 @@ class BrandController extends Base {
 
     const promise = new Promise(async (resolve, reject) => {
       const exist = await this.getbyDescription(brand.description);
-
-      if (exist === '0') {
+      
+      if (exist.id === 0) {
         //Se não encontrou grava a Forma de pagamento
         Tb.create(brand)
-          .then((data) => {
+          .then((data) => {            
             //com este retorno gravo a forma de pagamento no Institution
             const dataihbrand = {
               tb_institution_id: brand.tb_institution_id,
