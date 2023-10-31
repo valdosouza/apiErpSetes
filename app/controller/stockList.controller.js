@@ -25,11 +25,11 @@ class StockListController extends Base {
   }
 
   static async sync(stocklist) {
-
     const promise = new Promise(async (resolve, reject) => {      
-      this.insert(stocklist)
-        .then((data) => {
-              resolve(data);
+      Tb.create(stocklist)
+        .then(async (data) => {
+          await stockbalance.autoInsertByStokcList(stocklist.tb_institution_id, stocklist.id);
+          resolve(data);
         })
         .catch(err => {
           reject("StockListController.sync:" + err);
@@ -43,12 +43,12 @@ class StockListController extends Base {
     const promise = new Promise((resolve, reject) => {
       stocklist.id = idNext;
       Tb.create(stocklist)
-        .then((data) => {
-          stockbalance.autoInsertByStokcList(stocklist.tb_institution_id, data.id);
+        .then(async (data) => {
+          await stockbalance.autoInsertByStokcList(stocklist.tb_institution_id, data.id);
           resolve(data);
         })
         .catch(err => {
-          reject("Erro:" + err);
+          reject("StockListController.insert:" + err);
         });
     });
     return promise;

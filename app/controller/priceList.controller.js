@@ -43,7 +43,7 @@ class PriceListController extends Base {
           });
         }
         resolve({
-          code: product.id,
+          code: pricelist.id,
           id: 200,
           Message: "SYNCHED"
         });

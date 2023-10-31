@@ -3,12 +3,15 @@ const db = require("../model");
 const Tb = db.entity;
 const addressController = require('./address.controller.js');
 const phoneController = require('./phone.controller.js');
+const mailingController = require('./mailing.controller.js');
+const institutionHasEntity = require('./institutionHasEntity.controller.js');
 
 class EntityController extends Base {
 
   static async sync(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
+        
         await Tb.update(body.entity, {
           where: {
             id: body.entity.id
@@ -16,13 +19,15 @@ class EntityController extends Base {
         });
         await addressController.sync(body);
         await phoneController.sync(body);
+        await mailingController.sync(body);
+        await institutionHasEntity.sync(body)
         resolve({
           body: body,
           id: 200,
           Message: "SYNCHED"
         });
       } catch (error) {
-        reject("PersonController.sync:" + error);
+        reject("EntityController.sync:" + error);
       }
     });
     return promise;

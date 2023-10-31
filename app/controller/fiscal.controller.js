@@ -27,7 +27,7 @@ class FiscalController extends Base {
                 })
             }
           }
-          //Caso seja CNPJ
+          //Caso seja CNPJ devido ao docNumber estar vazio
           if (docNumber == "") {
             if (body.company.cnpj != "") {
               docNumber = body.company.cnpj;
@@ -41,7 +41,6 @@ class FiscalController extends Base {
             }
           }
           body.objEntity.entity.id = idEntity;
-          body.objEntity.email.id = idEntity;
           body.objEntity.socialmedia.id = idEntity;
         } else {
           //trata no sem Doc
@@ -68,7 +67,7 @@ class FiscalController extends Base {
       try {
         if (docNumber == '00000000000') {
           //Consumidor final
-          resolve({ id: 2,doc:'00000000000' });
+          resolve({ id: 2, doc: '00000000000' });
         } else {
           Tb.sequelize.query(
             'Select id, cpf doc ' +

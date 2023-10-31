@@ -85,7 +85,6 @@ routes.use("/merchandise", merchandise);
 const stock = require("../routes/stock.routes");
 routes.use("/stock", stock);
 
-
 const stockbalance = require("../routes/stockBalance.routes");
 routes.use("/stockbalance", stockbalance);
 

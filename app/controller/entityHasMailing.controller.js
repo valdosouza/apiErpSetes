@@ -5,36 +5,49 @@ const Tb = db.entityHasMailing;
 
 class EntityHasMailingController extends Base {
 
+    static async sync(entityHM) {
+        const promise = new Promise((resolve, reject) => {
+            try {
+                this.insert(entityHM)
+                    .then((data) => {
+                        resolve(data);
+                    })
+            } catch (error) {
+                reject("EntityHasMailingController.sync:" + err);
+            }
+        });
+        return promise;
+    }
+
     static async insert(entityHM) {
-        
-        const promise = new Promise((resolve, reject) => {            
+        const promise = new Promise((resolve, reject) => {
             Tb.create(entityHM)
                 .then((data) => {
                     resolve(data);
                 })
                 .catch(err => {
-                    reject("Erro:"+ err);
+                    reject("EntityHasMailingController.insert:" + err);
                 });
         });
-        return promise;        
-    }    
+        return promise;
+    }
 
     static async update(entityHM) {
-        
+
         const promise = new Promise((resolve, reject) => {
 
             Tb.update(entityHM, {
-                where: { tb_entity_id: tb_entity_id, tb_mailing_id:tb_mailing_id, tb_mailing_group_id:tb_mailing_group_id }
-              })                        
+                where: { tb_entity_id: tb_entity_id, tb_mailing_id: tb_mailing_id, tb_mailing_group_id: tb_mailing_group_id }
+            })
                 .then((data) => {
                     resolve(data);
                 })
                 .catch(err => {
-                    reject("Erro:"+ err);
+                    reject("Erro:" + err);
                 });
         });
-        return promise;        
-    }        
+        return promise;
+    }
 
     static async delete(entityHM) {
         const promise = new Promise((resolve, reject) => {
@@ -51,8 +64,8 @@ class EntityHasMailingController extends Base {
                 });
             */
         });
-        return promise;        
-    }        
-    
+        return promise;
+    }
+
 }
 module.exports = EntityHasMailingController;

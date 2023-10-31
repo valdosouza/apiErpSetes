@@ -80,6 +80,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
   *   description: The Stock Balance managing API
   */
 
+
 /**
  * @swagger
  * /stockbalance/getlist/:
