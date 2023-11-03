@@ -10,8 +10,8 @@ class ProviderController extends Base {
       try {
         await fiscalController.sync(body.fiscal)
           .then(async (data) => {
-            body.fiscal.person = data.body.person;
-            body.fiscal.company = data.body.company;
+            if (body.fiscal.person)  body.fiscal.person = data.body.person;
+            if (body.fiscal.company) body.fiscal.company = data.body.company;            
             
             var regProvider = await this.getById(body.fiscal.objEntity.tb_institution_id, body.fiscal.objEntity.entity.id);
             if (regProvider.id == 0) {

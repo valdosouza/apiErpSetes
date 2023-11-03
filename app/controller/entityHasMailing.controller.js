@@ -32,6 +32,30 @@ class EntityHasMailingController extends Base {
         return promise;
     }
 
+    static getbyEnttity = (id) => {
+        const promise = new Promise((resolve, reject) => {
+            Tb.sequelize.query(
+                'Select * ' +
+                'from tb_entity_has_mailing  ' +
+                'where tb_entity_id =?',
+                {
+                    replacements: [id],
+                    type: Tb.sequelize.QueryTypes.SELECT
+                }
+            ).then(data => {
+                if (data.length > 0) {
+                    resolve(data[0]);
+                } else {
+                    resolve({ id: 0 });
+                }
+            })
+                .catch(err => {
+                    reject(new Error("Algum erro aconteceu ao buscar Email"));
+                });
+        });
+        return promise;
+    }
+
     static async update(entityHM) {
 
         const promise = new Promise((resolve, reject) => {

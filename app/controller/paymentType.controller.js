@@ -7,10 +7,10 @@ class PaymentTypeController extends Base {
 
   static async sync(paymentType) {
 
-    const promise = new Promise(async (resolve, reject) => {      
+    const promise = new Promise(async (resolve, reject) => {
       this.insert(paymentType)
         .then((data) => {
-              resolve(data);
+          resolve(data);
         })
         .catch(err => {
           reject("PaymentTypeController.sync:" + err);
@@ -21,22 +21,23 @@ class PaymentTypeController extends Base {
 
   static async getIdByDescription(descripton) {
     const promise = new Promise((resolve, reject) => {
-      Tb.sequelize.query(
-        'Select id ' +
-        'from tb_payment_types ' +
-        'WHERE ( description =? ) ',
-        {
-          replacements: [descripton],
-          type: Tb.sequelize.QueryTypes.SELECT
-        }).then(data => {
-          if (data.length > 0)
-            resolve(data[0]);
-          else
-            resolve({id:0});
-        })
-        .catch(err => {
-          reject(new Error(err));
-        });
+      try {
+        Tb.sequelize.query(
+          'Select id ' +
+          'from tb_payment_types ' +
+          'WHERE ( description =? ) ',
+          {
+            replacements: [descripton],
+            type: Tb.sequelize.QueryTypes.SELECT
+          }).then(data => {
+            if (data.length > 0)
+              resolve(data[0]);
+            else
+              resolve({ id: 0 });
+          })          
+      } catch (error) {
+        reject("PaymentTypeController.sync:" + error);        
+      }
     });
     return promise;
   }
@@ -44,31 +45,58 @@ class PaymentTypeController extends Base {
   static async insert(paymentType) {
 
     const promise = new Promise(async (resolve, reject) => {
-      const exist = await this.getbyDescription(paymentType.description);
+      try {
+        const exist = await this.getIdByDescription(paymentType.description);
+        if (exist.id === 0) {
+          //Se não encontrou grava a Forma de pagamento
+          paymentType.id = await this.getNextId();
+          Tb.create(paymentType)
+            .then(async (data) => {
+              //com este retorno gravo a forma de pagamento no Institution
+              const dataihpayment = {
+                tb_institution_id: paymentType.tb_institution_id,
+                tb_payment_types_id: data.id,
+                active: paymentType.active,
+              };
+              await ihPaymentType.insert(dataihpayment)
+                .then((data) => {
+                  paymentType.id = data.id;
+                  resolve(paymentType);
+                });
+            })
+        } else {
+          //Se a forma de pagamento já existe fazer outro tratamento
+          //Finalizado 20/10/2022
+          paymentType.id = exist.id;
+          resolve(paymentType);
+        }
 
-      if (exist === '0') {
-        //Se não encontrou grava a Forma de pagamento
-        Tb.create(paymentType)
-          .then((data) => {
-            //com este retorno gravo a forma de pagamento no Institution
-            const dataihpayment = {
-              tb_institution_id: paymentType.tb_institution_id,
-              tb_payment_types_id: data.id,
-              active: paymentType.active,
-            };
-            ihPaymentType.insert(dataihpayment)
-              .then((data) => {
-                paymentType.id = data.id;
-                resolve(paymentType);
-              });
+      } catch (error) {
+        reject("PaymentTypeController.insert:" + error);
+      }
+    });
+    return promise;
+  }
+
+  static async getNextId() {
+    const promise = new Promise((resolve, reject) => {
+      try {
+        Tb.sequelize.query(
+          'Select max(id) lastId ' +
+          'from tb_payment_types ',
+          {
+            type: Tb.sequelize.QueryTypes.SELECT
+          }).then(data => {
+            if (data) {
+              const NextId = data[0].lastId + 1;
+              resolve(NextId);
+            } else {
+              resolve(1);
+            }
           })
-          .catch(err => {
-            reject("Erro:" + err);
-          });
-      } else {
-        //Se a forma de pagamento já existe fazer outro tratamento
-        //Finalizado 20/10/2022
-        resolve(paymentType);
+
+      } catch (error) {
+        reject('PaymentTypeController.getNexId: ' + errorr);
       }
     });
     return promise;

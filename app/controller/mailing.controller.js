@@ -29,23 +29,35 @@ class MailingController extends Base {
   }
 
   static sync = (body) => {
-    const promise = new Promise((resolve, reject) => {
+    const promise = new Promise(async (resolve, reject) => {
       try {
-        var mailingReg = {
-          id: 0,
-          email: body.mailing.email,
-        }
-        this.insert(mailingReg)
-          .then(async data => {
-            console.log(data);
-            var etdHasMailingReg = {
-              tb_entity_id: body.entity.id,
-              tb_mailing_id: data.id,
-              tb_mailing_group_id: 2,
+        if (!body.mailing.email == "") {
+          var emailExist = await this.getByEmail(body.mailing.email);
+          if (emailExist.id == 0) {
+            var mailingReg = {
+              id: 0,
+              email: body.mailing.email
             }
-            await entityHasMailing.sync(etdHasMailingReg);
-            resolve(data);
-          })
+            this.insert(mailingReg)
+              .then(async data => {
+                if (data.id > 0) {
+                  var etdHasMailingReg = {
+                    tb_entity_id: body.entity.id,
+                    tb_mailing_id: data.id,
+                    tb_mailing_group_id: 1,
+                  }
+                  await entityHasMailing.sync(etdHasMailingReg);
+                  resolve(data);
+                } else {
+                  resolve({ result: "Sem email não precisa vinculo" });
+                }
+              })
+            
+          }
+          resolve({ result: "email já existe" });
+        } else {
+          resolve({ result: "Campo email vazio" });
+        }
       } catch (error) {
         reject("MailingController.sync:" + error);
       }
@@ -66,8 +78,8 @@ class MailingController extends Base {
         } else {
           mailing.id = emailExist.id;
           this.update(mailing)
-            .then(data => {
-              resolve(data);
+            .then(() => {
+              resolve(emailExist);
             })
         }
       } catch (error) {
@@ -160,7 +172,7 @@ class MailingController extends Base {
         Tb.sequelize.query(
           'Select * ' +
           'from tb_mailing m ' +
-          'where (m.email=?)',
+          'where (m.email = ?)',
           {
             replacements: [email],
             type: Tb.sequelize.QueryTypes.SELECT

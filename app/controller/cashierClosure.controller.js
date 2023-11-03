@@ -7,7 +7,7 @@ const FinancialStatementController = require("../controller/financialStatement.c
 const OrderConsigngmentController = require('../controller/orderConsignment.controller.js');
 
 class CashierClosureController extends Base {
-  static async create(body) {
+  static async insert(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var cashier = await CashierController.getLastIdOpen(body.tb_institution_id, body.tb_user_id);

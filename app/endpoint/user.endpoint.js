@@ -23,7 +23,7 @@ class UserEndPoint {
     }    
     // Create a User
     const user = req.body;
-    UserController.create(user)
+    UserController.insert(user)
       .then(data => {
       res.send(data);
     })

@@ -18,13 +18,14 @@ class CollaboratorController extends Base {
         await fiscalController.sync(body.fiscal)
           .then(async (data) => {
 
-            body.fiscal.person = data.body.person;
-            body.fiscal.company = data.body.company;
+            if (body.fiscal.person) body.fiscal.person = data.body.person;
+            if (body.fiscal.company) body.fiscal.company = data.body.company;
 
             var regCollaborator = await this.getById(body.fiscal.objEntity.tb_institution_id, body.fiscal.objEntity.entity.id);
             if (regCollaborator.id == 0) {
               body.collaborator.id = body.fiscal.objEntity.entity.id;
               await Tb.create(body.collaborator);
+              await this.autoCreateUser(body.fiscal.objEntity);
             } else {
               body.collaborator.id = body.fiscal.objEntity.entity.id;
               await Tb.update(body.collaborator, {
@@ -34,6 +35,7 @@ class CollaboratorController extends Base {
                 }
               });
             }
+
             resolve({
               body: body,
               id: 200,
@@ -46,6 +48,32 @@ class CollaboratorController extends Base {
     });
     return promise;
   }
+
+  static async autoCreateUser(body) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        var dataUser = {
+          tb_institution_id: body.tb_institution_id,
+          id: body.entity.id,
+          nick: body.entity.nick_trade,
+          email: body.mailing.email,
+          password: '827CCB0EEA8A706C4C34A16891F84E7B',
+          kind: 'Sistema',
+          tb_device_id: 0,
+          active: 'S'
+        }        
+        
+        var userId = await userController.getById(dataUser.id);        
+        if (userId.id == 0) {
+          await userController.createAuto(dataUser);
+        }
+        resolve(body);
+      } catch (error) {
+        reject('Collaborator.autoCreateUser: ' + error);
+      }
+    });
+    return promise;
+  };
 
   static async getById(tb_institution_id, id) {
     const promise = new Promise((resolve, reject) => {
@@ -278,14 +306,14 @@ class CollaboratorController extends Base {
   static get = (tb_institution_id, id) => {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        
+
         var result = {};
         const dataCollaborator = await this.getById(tb_institution_id, id);
         result.collaborator = dataCollaborator;
-        
+
         const dataEntity = await entityController.getById(id);
         result.entity = dataEntity;
-        
+
         const dataPerson = await personController.getById(id);
         if (dataPerson.id > 0) {
           result.person = dataPerson;
@@ -302,7 +330,7 @@ class CollaboratorController extends Base {
 
         const userEmail = await userController.getEmailByEntity(id);
         result.user = { email: userEmail };
-        
+
         resolve(result);
       }
       catch (err) {

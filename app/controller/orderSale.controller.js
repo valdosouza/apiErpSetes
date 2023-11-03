@@ -5,9 +5,9 @@ const orderController = require('./order.controller.js');
 const orderBilling = require('./orderBilling.controller.js');
 const orderTotalizer = require('./orderTotalizer.controller.js');
 const orderItemController = require('./orderItem.controller.js');
-const fiscalController = require('./fiscal.controller.js');
 const stockStatement = require('./stockStatement.controller.js');
 const EntityHasStockListController = require('./entityHasStockList.controller.js');
+const EntityExtenralCode = require('./entityExternalCode.controller.js');
 
 class OrderSaleController extends Base {
   static async getNextNumber(tb_institution_id,tb_salesman_id) {
@@ -37,17 +37,20 @@ class OrderSaleController extends Base {
   static async sync(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        var regSalesman = await fiscalController.getByDocNumber(body.sale.doc_salesman);
-        if (regSalesman.id > 0)
-          body.order.tb_user_id = regSalesman.id
-        else
-          body.order.tb_user_id = body.sale.tb_institution_id;
-
-        var regCustomer = await fiscalController.getByDocNumber(body.sale.doc_customer);
-        body.sale.tb_customer_id = regCustomer.id;
-        body.sale.tb_salesman_id = body.order.tb_user_id;
-        delete body.sale.doc_customer;
-        delete body.sale.doc_salesman;
+        
+        var regSalesman = await EntityExtenralCode.getByExternalCode(body.sale.tb_institution_id,body.sale.salesman_external_code,'COLABORADOR');
+        body.sale.tb_salesman_id  = regSalesman.tb_entity_id;
+        //Caso seja zer pegar o primeiro colaborador da lista do estabelemcimento
+        if (body.sale.tb_salesman_id == 0){
+          regSalesman = await EntityExtenralCode.getFirstExternalCode(body.sale.tb_institution_id,'COLABORADOR');
+          body.sale.tb_salesman_id  = regSalesman.tb_entity_id;  
+        }
+        
+        var regCustomer = await EntityExtenralCode.getByExternalCode(body.sale.tb_institution_id,body.sale.customer_external_code,'EMPRESA');
+        body.sale.tb_customer_id = regCustomer.tb_entity_id;
+        body.order.tb_user_id   = body.sale.tb_salesman_id
+        delete body.sale.customerExternalCode;
+        delete body.sale.salesmanExternalCode;
         orderController.sync(body.order);
         var regOrderSale = await this.getById(body.sale.id, body.sale.tb_institution_id, body.sale.terminal);
         if (regOrderSale.id == 0) {
@@ -525,7 +528,6 @@ class OrderSaleController extends Base {
               unit_value: item.unit_value,
               kind: 'Sale',
             };
-            console.log(dataItem);
             //Quanto o insert é mais complexo como getNext precisa do no loop              
             switch (item.update_status) {
               case "I":

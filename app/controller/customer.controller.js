@@ -2,6 +2,7 @@ const Base = require('./base.controller.js');
 const db = require("../model");
 const Tb = db.customer;
 const fiscalController = require('./fiscal.controller.js');
+const EntityExtenralCode = require('./entityExternalCode.controller.js');
 
 class CustomerController extends Base {
 
@@ -11,9 +12,13 @@ class CustomerController extends Base {
 
         await fiscalController.sync(body.fiscal)
           .then(async (data) => {
-            body.fiscal.person = data.body.person;
-            body.fiscal.company = data.body.company;
-            delete body.customer.doc_salesman;
+            if (body.fiscal.person)  body.fiscal.person = data.body.person;
+            if (body.fiscal.company) body.fiscal.company = data.body.company;
+            body.customer.tb_salesman_id = await EntityExtenralCode.getByExternalCode(
+              body.customer.tb_institution_id,
+              body.customer.salesmanExternalCode,
+              'COLABORADOR'
+            )
             var regCustomer = await this.getById(body.fiscal.objEntity.tb_institution_id, body.fiscal.objEntity.entity.id);
             if (regCustomer.id == 0) {
               body.customer.id = body.fiscal.objEntity.entity.id;

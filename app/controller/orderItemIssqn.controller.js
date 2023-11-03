@@ -7,7 +7,7 @@ class OrderItemIssqnController extends Base {
   static async sync(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        if (body !== null) {
+        if (body) {
           for (var item of body) {
             if (item != null) {
               var regItem = await this.getById(item.tb_order_item_id, item.tb_order_id, item.tb_institution_id, item.terminal);
@@ -27,7 +27,7 @@ class OrderItemIssqnController extends Base {
           }
         }
         resolve({
-          code: body.tb_order_item_id,
+          code: body,
           id: 200,
           Message: "SYNCHED"
         });

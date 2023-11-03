@@ -24,8 +24,7 @@ class SalesmanController extends Base {
                   id: body.salesman.id
                 }
               });
-            }
-            
+            }            
             resolve({
               code: body.salesman.id,
               id: 200,
@@ -38,9 +37,6 @@ class SalesmanController extends Base {
     });
     return promise;
   }
-
-
-
 
   static async getById(tb_institution_id, id) {
     const promise = new Promise((resolve, reject) => {

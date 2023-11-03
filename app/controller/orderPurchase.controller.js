@@ -5,7 +5,7 @@ const orderController = require('./order.controller.js');
 const orderBilling = require('./orderBilling.controller.js');
 const orderTotalizer = require('./orderTotalizer.controller.js');
 const orderItemController = require('./orderItem.controller.js');
-const fiscalController = require('./fiscal.controller.js');
+const EntityExtenralCode = require('./entityExternalCode.controller.js');
 
 class OrderPurchaseController extends Base {
   static async getNextNumber(tb_institution_id) {
@@ -35,16 +35,17 @@ class OrderPurchaseController extends Base {
   static async sync(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        var regUser = await fiscalController.getByDocNumber(body.order.doc_user);
-        if (regUser.id > 0)
-          body.order.tb_user_id = regUser.id
-        else  
-          body.order.tb_user_id = body.order_purchase.tb_institution_id;
+        var regUser = await EntityExtenralCode.getByExternalCode(body.order.tb_institution_id,body.order.user_external_code,'COLABORADOR');        
+        body.order.tb_user_id = regUser.tb_entity_id;
+        //Caso seja zer pegar o primeiro colaborador da lista do estabelemcimento
+        if (body.order.tb_user_id == 0){
+          regUser = await EntityExtenralCode.getFirstExternalCode(body.order.tb_institution_id,'COLABORADOR');
+          body.order.tb_user_id  = regUser.tb_entity_id;  
+        }        
         
-        var regProvider = await fiscalController.getByDocNumber(body.order_purchase.doc_provider);
-        body.order_purchase.tb_provider_id = regProvider.id;        
-        delete body.order_purchase.doc_provider;
-        delete body.order.doc_user;
+        var regProvider = await EntityExtenralCode.getByExternalCode(body.order_purchase.tb_institution_id,body.order_purchase.provider_external_code,'EMPRESA');
+        body.order_purchase.tb_provider_id = regProvider.tb_entity_id;                
+        
         orderController.sync(body.order);       
         var regOrderPurchase = await this.getById(body.order_purchase.id, body.order_purchase.tb_institution_id, body.order_purchase.terminal) ;
         if (regOrderPurchase.id == 0){                           

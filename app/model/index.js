@@ -77,6 +77,7 @@ db.mailingGroup = require("./mailingGroupModel.js")(sequelize, Sequelize);
 db.socialMedia = require("./socialMedia.model.js")(sequelize, Sequelize);
 db.person = require("./person.model.js")(sequelize, Sequelize);
 db.company = require("./company.model.js")(sequelize, Sequelize);
+db.entityExternalCode = require("./entityExternalCode.model.js")(sequelize, Sequelize);
 db.institution = require("./institution.model.js")(sequelize, Sequelize);
 db.stockList = require("./stockList.model.js")(sequelize, Sequelize);
 db.stockBalance = require("./stockBalance.model.js")(sequelize, Sequelize);

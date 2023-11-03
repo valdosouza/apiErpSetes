@@ -101,12 +101,15 @@ class CompanyController extends Base {
 
   static async update(company) {
     const promise = new Promise((resolve, reject) => {
-      Tb.update(company, {
-        where: { id: company.id }
-      })
-        .catch(err => {
-          reject("Erro:" + err);
-        });
+      try {
+        Tb.update(company, {
+          where: { id: company.id }
+        }).then(()=>{
+          resolve(company);
+        })          
+      } catch (error) {
+        reject('Company.update:' + err);
+      }      
     });
     return promise;
   }

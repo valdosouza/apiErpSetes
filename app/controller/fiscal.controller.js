@@ -1,9 +1,10 @@
 const Base = require('./base.controller.js');
 const db = require("../model");
-const Tb = db.person;
+const Tb = db.entity;
 const entityController = require('./entity.controller.js');
 const companyController = require('./company.controller.js');
 const personController = require('./person.controller.js');
+const entityExternalCodeController = require('./entityExternalCode.controller.js');
 const { entity } = require('../model/index.js');
 
 class FiscalController extends Base {
@@ -11,49 +12,82 @@ class FiscalController extends Base {
   static async sync(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        var idEntity = 0;
-        if (body.noDocNumber.id == 0) {
-          var docNumber = "";
-          var docKind = "";
-          //Caso seja CPF
-          if (body.person) {
-            if (body.person.cpf != "") {
-              docNumber = body.person.cpf;
-              docKind = "F";
-              await personController.sync(body.person)
-                .then((data) => {
-                  body.person = data.body;
-                  idEntity = body.person.id;
-                })
-            }
+        //Verifica se o external code existe.
+        var entityExist = await entityExternalCodeController.getByExternalCode(
+          body.entity_external_code.tb_institution_id,
+          body.entity_external_code.reference,
+          body.entity_external_code.kind);
+        if (entityExist.tb_entity_id == 0) {
+          //Tenta incluir PJ          
+          if (body.company.cnpj.length > 0) {
+            await this.createCompany(body)
+              .then(async (data) => {
+                body = data;
+                body.entity_external_code.tb_entity_id = body.objEntity.entity.id;
+                await entityExternalCodeController.insert(body.entity_external_code)
+                  .then(async (data) => {
+                    body.entity_external_code = data;
+                    await entityController.sync(body.objEntity);
+                    resolve({
+                      body: body,
+                      id: 200,
+                      Message: "SYNCHED"
+                    });
+                  })
+              });
+          } else {
+            //caso não seja PJ vai gravar um registro de PF idenpendente do CPF correto
+            await this.createPerson(body)
+              .then(async (data) => {
+                body = data;
+                body.entity_external_code.tb_entity_id = body.objEntity.entity.id;
+                await entityExternalCodeController.insert(body.entity_external_code)
+                  .then(async (data) => {
+                    body.entity_external_code = data;
+                    await entityController.sync(body.objEntity)
+                      .then(() => {
+                        resolve({
+                          body: body,
+                          id: 200,
+                          Message: "SYNCHED"
+                        });
+                      })
+                  })
+              });
           }
-          //Caso seja CNPJ devido ao docNumber estar vazio
-          if (docNumber == "") {
-            if (body.company.cnpj != "") {
-              docNumber = body.company.cnpj;
-              docKind = "J";
-              await companyController.sync(body.company)
-                .then((data) => {
-                  body.company = data.body;
-                  idEntity = body.company.id;
 
-                })
-            }
-          }
-          body.objEntity.entity.id = idEntity;
-          body.objEntity.socialmedia.id = idEntity;
         } else {
-          //trata no sem Doc
+          //Encontrou a entidade vinculada          
+          body.objEntity.entity.id = entityExist.tb_entity_id;
+          //Tenta atualizar PJ
+          if (body.company.cnpj.length > 0) {
+            body.company.id = body.objEntity.entity.id;
+            await this.updateCompany(body)
+              .then(async (data) => {
+                body = data;
+                await entityController.update(body.objEntity);
+                resolve({
+                  body: body,
+                  id: 200,
+                  Message: "SYNCHED"
+                });
+              });
+          } else {
+            
+            //caso não seja PJ vai gravar um registro de PF idenpendente do CPF correto
+            body.person.id = body.objEntity.entity.id;            
+            await this.updatePerson(body)
+              .then(async (data) => {
+                body = data;
+                await entityController.sync(body.objEntity);
+                resolve({
+                  body: body,
+                  id: 200,
+                  Message: "SYNCHED"
+                });
+              });
+          }
         }
-        //Sincroniza a Entidade        
-        await entityController.sync(body.objEntity)
-          .then(() => {
-            resolve({
-              body: body,
-              id: 200,
-              Message: "SYNCHED"
-            });
-          })
       } catch (error) {
         reject("FiscalController.sync:" + error);
       }
@@ -61,6 +95,68 @@ class FiscalController extends Base {
     return promise;
   }
 
+  static async createPerson(body) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        await personController.sync(body.person)
+          .then(async (data) => {
+            body.person = data.body;
+            body.objEntity.entity.id = body.person.id;
+            body.objEntity.socialmedia.id = body.person.id;
+            resolve(body);
+          })
+
+      } catch (error) {
+        reject('FiscalController.createPerson: ' + error);
+      }
+    });
+    return promise;
+  };
+
+  static async updatePerson(body) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        await personController.update(body.person)
+          .then(() => {
+            resolve(body);
+          })
+      } catch (error) {
+        reject('FiscalController.updatePerson: ' + error);
+      }
+    });
+    return promise;
+  };
+
+  static async createCompany(body) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        await companyController.sync(body.company)
+          .then(async (data) => {
+            body.company = data.body;
+            body.objEntity.entity.id = body.company.id;
+            body.objEntity.socialmedia.id = body.company.id;
+            resolve(body);
+          })
+      } catch (error) {
+        reject('FiscalController.createCompany: ' + error);
+      }
+    });
+    return promise;
+  };
+
+  static async updateCompany(body) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        await companyController.update(body.company)
+          .then(() => {
+            resolve(body);
+          })
+      } catch (error) {
+        reject('FiscalController.updateCompany: ' + error);
+      }
+    });
+    return promise;
+  };
 
   static async getByDocNumber(docNumber) {
     const promise = new Promise((resolve, reject) => {
@@ -96,5 +192,6 @@ class FiscalController extends Base {
     return promise;
   };
 
+  
 }
 module.exports = FiscalController; 

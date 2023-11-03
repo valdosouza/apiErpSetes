@@ -6,7 +6,7 @@ const orderController = require('./order.controller.js');
 const orderTotalizer = require('./orderTotalizer.controller.js');
 const orderItemController = require('./orderItem.controller.js');
 const fiscalController = require('./fiscal.controller.js');
-
+const EntityExtenralCode = require('./entityExternalCode.controller.js');
 
 class OrderStockAdjustController extends Base {
   static async getNextNumber(tb_institution_id) {
@@ -36,26 +36,29 @@ class OrderStockAdjustController extends Base {
   static async sync(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        var regUser = await fiscalController.getByDocNumber(body.order.doc_user);
-        if (regUser.id > 0)
-          body.order.tb_user_id = regUser.id
-        else
-          body.order.tb_user_id = body.orderStockAdjust.tb_institution_id;
+        var regUser = await EntityExtenralCode.getByExternalCode(body.order.tb_institution_id,body.order.user_external_code,'COLABORADOR');        
+        body.order.tb_user_id = regUser.tb_entity_id;
+        //Caso seja zer pegar o primeiro colaborador da lista do estabelemcimento
+        if (body.order.tb_user_id == 0){
+          regUser = await EntityExtenralCode.getFirstExternalCode(body.order.tb_institution_id,'COLABORADOR');
+          body.order.tb_user_id  = regUser.tb_entity_id;  
+        }        
+        
+        var regEntity = await EntityExtenralCode.getByExternalCode(body.order_stock_adjust.tb_institution_id,body.order_stock_adjust.entity_external_code,'EMPRESA');
+        body.order_stock_adjust.tb_entity_id = regEntity.tb_entity_id;                
 
-        var regEntity = await fiscalController.getByDocNumber(body.orderStockAdjust.doc_entity);
-        body.orderStockAdjust.tb_entity_id = regEntity.id;
-        delete body.orderStockAdjust.doc_entity;
-        delete body.order.doc_user;
+
+
         orderController.sync(body.order);
-        var regOrderPurchase = await this.getById(body.orderStockAdjust.id, body.orderStockAdjust.tb_institution_id, body.orderStockAdjust.terminal);
-        if (regOrderPurchase.id == 0) {
-          Tb.create(body.orderStockAdjust);
+        var regOrderStockAdjust = await this.getById(body.order_stock_adjust.id, body.order_stock_adjust.tb_institution_id, body.order_stock_adjust.terminal);
+        if (regOrderStockAdjust.id == 0) {
+          Tb.create(body.order_stock_adjust);
         } else {
-          Tb.update(body.orderStockAdjust, {
+          Tb.update(body.order_stock_adjust, {
             where: {
-              tb_institution_id: body.orderStockAdjust.tb_institution_id,
-              id: body.orderStockAdjust.id,
-              terminal: body.orderStockAdjust.terminal,
+              tb_institution_id: body.order_stock_adjust.tb_institution_id,
+              id: body.order_stock_adjust.id,
+              terminal: body.order_stock_adjust.terminal,
             }
           });
         }

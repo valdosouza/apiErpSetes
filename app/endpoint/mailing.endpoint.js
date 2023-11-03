@@ -14,7 +14,7 @@ class MailingEndPoint {
 
     // Create a mailing
     const mailng = req.body;
-    MailingController.create(mailng)
+    MailingController.insert(mailng)
       .then(data => {
         res.send(data);
     })

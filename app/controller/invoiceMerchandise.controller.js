@@ -41,30 +41,30 @@ class InvoiceMerchandiseController extends Base {
       try {        
         invoice.sync(body.invoice);        
         
-        var regInvoiceMerchandise = await this.getById(body.invoicemerchandise.id, body.invoicemerchandise.tb_institution_id, body.invoicemerchandise.terminal) ;
+        var regInvoiceMerchandise = await this.getById(body.invoice_merchandise.id, body.invoice_merchandise.tb_institution_id, body.invoice_merchandise.terminal) ;
         if (regInvoiceMerchandise.id == 0){                           
-          Tb.create(body.invoicemerchandise);
+          Tb.create(body.invoice_merchandise);
         }else{
-          Tb.update(body.invoicemerchandise,{
+          Tb.update(body.invoice_merchandise,{
             where: {
-            tb_institution_id: body.invoicemerchandise.tb_institution_id,
-            id: body.invoicemerchandise.id,
-            terminal: body.invoicemerchandise.terminal,
+            tb_institution_id: body.invoice_merchandise.tb_institution_id,
+            id: body.invoice_merchandise.id,
+            terminal: body.invoice_merchandise.terminal,
             }
           });
         }       
         
-        invoiceShippingController.sync(body.invoiceshipping);
+        await invoiceShippingController.sync(body.invoice_shipping);        
+        await iinvoiceObsController.sync(body.invoice_obs);   
         
-        itensIcmsController.sync(body.itemsicms);        
+        await itensIcmsController.sync(body.items_icms);                
+        await itensIpiController.sync(body.items_ipi);
+        await itensPisController.sync(body.items_pis);
+        await itensCofinsController.sync(body.items_cofins);
+        await itensIiController.sync(body.items_ii);
+        await itensIssqnController.sync(body.items_issqn);
         
-        itensIpiController.sync(body.itemsipi);
-        itensPisController.sync(body.itemspis);
-        itensCofinsController.sync(body.itemscofins);
-        itensIiController.sync(body.itemsii);
-        itensIssqnController.sync(body.itemsissqn);
-        iinvoiceObsController.sync(body.invoiceobs);   
-                   
+               
         resolve({
           code: body.invoice.id,
           id: 200,

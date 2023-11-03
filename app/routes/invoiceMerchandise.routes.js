@@ -10,7 +10,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * @swagger
  * components:
  *   schemas:
- *     invoicemerchandise:
+ *     invoice_merchandise:
  *       type: object
  *       properties:
  *         id:
@@ -49,43 +49,43 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *           type: integer
  * 
  * 
- *     objInvoiceMerchandise:
+ *     obj_invoice_merchandise:
  *       type: object
  *       properties:
  *         invoice:
  *           $ref: '#/components/schemas/invoice'
  *         invoicemerchandise:
- *           $ref: '#/components/schemas/invoicemerchandise'
+ *           $ref: '#/components/schemas/invoice_merchandise'
  *         invoiceshipping:
- *           $ref: '#/components/schemas/invoiceshipping'
+ *           $ref: '#/components/schemas/invoice_shipping'
  *         itemicms:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/orderItemIcms'
+ *              $ref: '#/components/schemas/order_item_icms'
  *         itemipi:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/orderItemIpi'
+ *              $ref: '#/components/schemas/order_item_ipi'
  *         itempis:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/orderItemPis'
+ *              $ref: '#/components/schemas/order_item_pis'
  *         itemcofins:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/orderItemCofins'
+ *              $ref: '#/components/schemas/order_item_cofins'
  *         itemii:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/orderItemIi'
+ *              $ref: '#/components/schemas/order_item_ii'
  *         itemissqn:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/orderItemIssqn'
+ *              $ref: '#/components/schemas/order_item_issqn'
  *         invoiceobs:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/invoiceObs'
+ *              $ref: '#/components/schemas/invoice_obs'
  * 
  *  
  */
