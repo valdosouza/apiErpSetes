@@ -38,7 +38,7 @@ module.exports = sequelize => {
       primaryKey: true,
       autoIncrement: false,
       comment: null,
-      field: "issuer"
+      field: "tb_invoice_id"
     },
     kind: {
       type: DataTypes.STRING(1),

@@ -49,14 +49,14 @@ module.exports = sequelize => {
       comment: null,
       field: "base_value"
     },
-    customs_expenses: {
+    customs_expense: {
       type: DataTypes.DECIMAL,
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
       comment: null,
-      field: "customs_expenses"
+      field: "customs_expense"
     },
     tag_value: {
       type: DataTypes.DECIMAL,

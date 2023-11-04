@@ -39,13 +39,13 @@ class InvoiceMerchandiseController extends Base {
   static async sync(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {        
-        invoice.sync(body.invoice);        
+        await invoice.sync(body.invoice);        
         
         var regInvoiceMerchandise = await this.getById(body.invoice_merchandise.id, body.invoice_merchandise.tb_institution_id, body.invoice_merchandise.terminal) ;
         if (regInvoiceMerchandise.id == 0){                           
-          Tb.create(body.invoice_merchandise);
+          await Tb.create(body.invoice_merchandise);
         }else{
-          Tb.update(body.invoice_merchandise,{
+          await Tb.update(body.invoice_merchandise,{
             where: {
             tb_institution_id: body.invoice_merchandise.tb_institution_id,
             id: body.invoice_merchandise.id,

@@ -18,7 +18,7 @@ class InvoiceObsController extends Base {
                   where: {
                     tb_institution_id: item.tb_institution_id,
                     tb_invoice_id: item.tb_invoice_id,
-                    id: item._id,
+                    id: item.id,
                     terminal: item.terminal,
                   }
                 });
