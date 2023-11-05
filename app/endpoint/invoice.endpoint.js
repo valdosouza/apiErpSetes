@@ -1,10 +1,10 @@
-const InvoiceMerchandiseController = require("../controller/invoiceMerchandise.controller.js");
+const InvoiceController = require("../controller/invoice.controller.js");
 
-class InvoiceMerchandiseEndPoint {
+class InvoiceEndPoint {
 
   static sync = (req, res) => {
     try {
-      InvoiceMerchandiseController.sync(req.body)
+      InvoiceController.sync(req.body)
         .then(data => {
           res.send({
             code: data.id,
@@ -23,4 +23,4 @@ class InvoiceMerchandiseEndPoint {
 
 
 }
-module.exports = InvoiceMerchandiseEndPoint; 
+module.exports = InvoiceEndPoint; 

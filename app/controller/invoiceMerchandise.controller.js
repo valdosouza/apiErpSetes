@@ -39,7 +39,20 @@ class InvoiceMerchandiseController extends Base {
   static async sync(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {        
-        await invoice.sync(body.invoice);        
+        //criar essa variavel para montar o body do invoice devido ao envio do invoice detached
+        var bodyInvoice ={
+          invoice: body.invoice,
+          invoice_obs: body.invoice_obs,
+          description: body.description,
+          date_change: body.date_change,
+          tb_institution_id: body.tb_institution_id,
+          cnpj_institution: body.cnpj_institution,
+          web_id: body.web_id,
+          terminal: body.terminal,
+          page: body.page
+        }
+        console.log(bodyInvoice);
+        await invoice.sync(bodyInvoice);        
         
         var regInvoiceMerchandise = await this.getById(body.invoice_merchandise.id, body.invoice_merchandise.tb_institution_id, body.invoice_merchandise.terminal) ;
         if (regInvoiceMerchandise.id == 0){                           

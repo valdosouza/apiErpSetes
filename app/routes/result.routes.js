@@ -7,34 +7,24 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * @swagger
  * components:
  *   schemas:
- *     invoice_obs:
+ *     result_message:
  *       type: object
  *       properties:
- *         tb_order_id:
- *           type: integer
  *         id:
  *           type: integer
- *         tb_institution_id:
- *           type: integer
- *         terminal:
- *           type: integer
- *         tb_invoice_id:
- *           type: integer
- *         kind:
+ *         body:
  *           type: string
- *         obs:
- *           type: string
+ *         message:
+ *           type: string 
  *  
- * 
  */
  
  
 /**
 * @swagger
 * tags:
-*   name: InvoiceObs
-*   description: The InvoiceObs managing API
+*   name: Result of operation
+*   description: The Result managing API
 */
-
 
 module.exports = router;

@@ -7,7 +7,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * @swagger
  * components:
  *   schemas:
- *     orderItemCofins:
+ *     items_ipi:
  *       type: object
  *       properties:
  *         tb_order_id:
@@ -24,11 +24,11 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *           type: number
  *         aliq_value:
  *           type: number
- *         tag_value:
- *           type: number
  *         qt_sale_qtty:
  *           type: number
  *         qt_aliq_value:
+ *           type: number
+ *         tag_value: 
  *           type: number
  *  
  * 
@@ -38,7 +38,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
 /**
 * @swagger
 * tags:
-*   name: OrderItemCofins
-*   description: The OrderItemCofins managing API
+*   name: OrderItemPis
+*   description: The OrderItemPis managing API
 */
 module.exports = router;

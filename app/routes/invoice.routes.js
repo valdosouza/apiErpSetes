@@ -1,4 +1,5 @@
 const { Router } = require("express");
+const invoice =  require("../endpoint/invoice.endpoint.js");
 const { withJWTAuthMiddleware } = require("express-kun");
 const router = Router();
 
@@ -18,8 +19,8 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *           type: integer
  *         issuer:
  *           type: integer
- *         doc_issuer:
- *           type: string  
+ *         issuer_external_code:
+ *           type: integer  
  *         kind_emis:
  *           type: string
  *         finality:
@@ -32,8 +33,8 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *           type: string
  *         tb_entity_id:
  *           type: integer
- *         doc_entity:
- *           type: string 
+ *         entity_external_code:
+ *           type: integer 
  *         dt_emission:
  *           type: string
  *         value:
@@ -47,13 +48,37 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * 
  *  
  */
+
  
- 
-/**
-* @swagger
-* tags:
-*   name: Invoice
-*   description: The Invoice managing API
-*/
+ /**
+ * @swagger
+ * tags:
+ *   name: Invoice
+ *   description: The Invoice managing API
+ */
+
+ /**
+ * @swagger
+ * /invoice/sync:
+ *   post:
+ *     summary: Create a new Invoice
+ *     tags: [Invoice]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/invoice'
+ *     responses:
+ *       200:
+ *         description: The Invoice was successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/result_message'
+ *       500:
+ *         description: Some server error
+ */
+ router.post("/sync/", invoice.sync);
 
 module.exports = router;

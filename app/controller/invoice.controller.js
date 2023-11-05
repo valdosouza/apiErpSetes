@@ -8,27 +8,27 @@ class InvoiceController extends Base {
 
   static async sync(body) {
     const promise = new Promise(async (resolve, reject) => {
-      try {
-        if (body.issuer_external_code > 0) {
-          var regIssuer = await EntityExtenralCode.getByExternalCode(body.tb_institution_id, body.issuer_external_code, 'EMPRESA');
-          body.issuer = regIssuer.tb_entity_id;
+      try {        
+        if (body.invoice.issuer_external_code > 0) {
+          var regIssuer = await EntityExtenralCode.getByExternalCode(body.invoice.tb_institution_id, body.invoice.issuer_external_code, 'EMPRESA');
+          body.invoice.issuer = regIssuer.tb_entity_id;
         }else{
-          body.issuer = body.tb_institution_id;
+          body.invoice.issuer = body.invoice.tb_institution_id;
         }
-        var regEntity = await EntityExtenralCode.getByExternalCode(body.tb_institution_id, body.entity_external_code, 'EMPRESA');                
-        body.tb_entity_id = regEntity.tb_entity_id;
+        var regEntity = await EntityExtenralCode.getByExternalCode(body.invoice.tb_institution_id, body.invoice.entity_external_code, 'EMPRESA');                
+        body.invoice.tb_entity_id = regEntity.tb_entity_id;
 
-        delete body.issuer_external_code;
-        delete body.issuer_external_code;
-        var regInvoice = await this.getById(body.id, body.tb_institution_id, body.terminal);        
+        delete body.invoice.issuer_external_code;
+        delete body.invoice.issuer_external_code;
+        var regInvoice = await this.getById(body.invoice.id, body.invoice.tb_institution_id, body.invoice.terminal);        
         if (regInvoice.id == 0) {
-          Tb.create(body);
+          Tb.create(body.invoice);
         } else {
-          Tb.update(body, {
+          Tb.update(body.invoice, {
             where: {
-              tb_institution_id: body.tb_institution_id,
-              id: body.id,
-              terminal: body.terminal,
+              tb_institution_id: body.invoice.tb_institution_id,
+              id: body.invoice.id,
+              terminal: body.invoice.terminal,
             }
           });
         }

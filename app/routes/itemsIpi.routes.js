@@ -7,9 +7,11 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * @swagger
  * components:
  *   schemas:
- *     orderItemIssqn:
+ *     items_ipi:
  *       type: object
  *       properties:
+ *         id:
+ *           type: integer
  *         tb_order_id:
  *           type: integer
  *         tb_order_item_id:
@@ -18,16 +20,26 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *           type: integer
  *         terminal:
  *           type: integer
+ *         cst:
+ *           type: string
+ *         class_frame:
+ *           type: string
+ *         producer_cnpj:
+ *           type: string
+ *         stamp_ctrl:
+ *           type: string
+ *         stamp_qtty:
+ *           type: number
+ *         class_frame_code:
+ *           type: string
  *         base_value:
  *           type: number
  *         aliq_value:
  *           type: number
- *         tag_value:
+ *         unit_qtty:
  *           type: number
- *         listservice:
- *           type: string
- *         tax_code:
- *           type: string
+ *         unit_value:
+ *           type: number 
  *  
  * 
  */
@@ -36,8 +48,8 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
 /**
 * @swagger
 * tags:
-*   name: OrderItemIssqn
-*   description: The OrderItemIssqn managing API
+*   name: OrderItemIpi
+*   description: The OrderItemIpi managing API
 */
 
 

@@ -1,7 +1,5 @@
-const { Router } = require("express");
-  
+const { Router } = require("express"); 
 const invoiceMerchandise =  require("../endpoint/invoiceMerchandise.endpoint.js");
-
 const { withJWTAuthMiddleware } = require("express-kun");
 const router = Router();
 
@@ -54,35 +52,35 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *       properties:
  *         invoice:
  *           $ref: '#/components/schemas/invoice'
- *         invoicemerchandise:
+ *         invoice_merchandise:
  *           $ref: '#/components/schemas/invoice_merchandise'
- *         invoiceshipping:
+ *         invoice_shipping:
  *           $ref: '#/components/schemas/invoice_shipping'
- *         itemicms:
+ *         items_icms:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/order_item_icms'
- *         itemipi:
+ *              $ref: '#/components/schemas/items_icms'
+ *         items_ipi:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/order_item_ipi'
- *         itempis:
+ *              $ref: '#/components/schemas/items_ipi'
+ *         items_pis:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/order_item_pis'
- *         itemcofins:
+ *              $ref: '#/components/schemas/items_pis'
+ *         items_cofins:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/order_item_cofins'
- *         itemii:
+ *              $ref: '#/components/schemas/items_cofins'
+ *         items_ii:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/order_item_ii'
- *         itemissqn:
+ *              $ref: '#/components/schemas/items_ii'
+ *         items_issqn:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/order_item_issqn'
- *         invoiceobs:
+ *              $ref: '#/components/schemas/items_issqn'
+ *         invoice_obs:
  *            type: array
  *            items:
  *              $ref: '#/components/schemas/invoice_obs'
@@ -102,21 +100,21 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * @swagger
  * /invoicemerchandise/sync:
  *   post:
- *     summary: Create a new pricelist
+ *     summary: Create a new Invoice Merchandise
  *     tags: [InvoiceMerchandise]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/objInvoiceMerchandise'
+ *             $ref: '#/components/schemas/obj_invoice_merchandise'
  *     responses:
  *       200:
  *         description: The objInvoiceMerchandise was successfully created
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/objInvoiceMerchandise'
+ *               $ref: '#/components/schemas/result_message'
  *       500:
  *         description: Some server error
  */
