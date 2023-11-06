@@ -19,28 +19,7 @@ class PaymentTypeController extends Base {
     return promise;
   }
 
-  static async getIdByDescription(descripton) {
-    const promise = new Promise((resolve, reject) => {
-      try {
-        Tb.sequelize.query(
-          'Select id ' +
-          'from tb_payment_types ' +
-          'WHERE ( description =? ) ',
-          {
-            replacements: [descripton],
-            type: Tb.sequelize.QueryTypes.SELECT
-          }).then(data => {
-            if (data.length > 0)
-              resolve(data[0]);
-            else
-              resolve({ id: 0 });
-          })          
-      } catch (error) {
-        reject("PaymentTypeController.sync:" + error);        
-      }
-    });
-    return promise;
-  }
+
 
   static async insert(paymentType) {
 
@@ -119,6 +98,29 @@ class PaymentTypeController extends Base {
         .catch(err => {
           reject(new Error("PaymentType:" + err));
         });
+    });
+    return promise;
+  }
+
+  static async getIdByDescription(description) {
+    const promise = new Promise((resolve, reject) => {
+      try {        
+        Tb.sequelize.query(
+          'Select id ' +
+          'from tb_payment_types ' +
+          'WHERE ( description =? ) ',
+          {
+            replacements: [description],
+            type: Tb.sequelize.QueryTypes.SELECT
+          }).then(data => {
+            if (data.length > 0)
+              resolve(data[0]);
+            else
+              resolve({ id: 0 });
+          })
+      } catch (error) {
+        reject("PaymentTypeController.sync:" + error);
+      }
     });
     return promise;
   }

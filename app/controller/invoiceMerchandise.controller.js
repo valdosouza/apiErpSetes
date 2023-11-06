@@ -50,8 +50,7 @@ class InvoiceMerchandiseController extends Base {
           web_id: body.web_id,
           terminal: body.terminal,
           page: body.page
-        }
-        console.log(bodyInvoice);
+        }        
         await invoice.sync(bodyInvoice);        
         
         var regInvoiceMerchandise = await this.getById(body.invoice_merchandise.id, body.invoice_merchandise.tb_institution_id, body.invoice_merchandise.terminal) ;

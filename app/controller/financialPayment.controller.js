@@ -2,18 +2,38 @@ const Base = require('./base.controller.js');
 const db = require("../model");
 const Tb = db.financialPayment;
 const DateFunction = require('../util/dateFunction.js');
-
 class FinancialPaymnetController extends Base {
 
-  static async insert(order) {
+  static async sync(body) {
     const promise = new Promise(async (resolve, reject) => {
-      Tb.create(order)
-        .then((data) => {
-          resolve(data);
-        })
-        .catch(err => {
-          reject("financialPaymnent.insert:" + err);
+      try {
+        var regFinancial = await this.getById(body.tb_institution_id, body.terminal, body.id);        
+        if (regFinancial.id == 0) {
+          await this.insert(body);
+        } else {
+          await this.update(body);
+        }        
+        resolve({
+          code: body.id,
+          id: 200,
+          Message: "SYNCHED"
         });
+      } catch (error) {
+        reject("FinancialPaymentController.sync:" + error);
+      }
+    });
+    return promise;
+  }
+  static async insert(body) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        Tb.create(body)
+          .then((data) => {
+            resolve(data);
+          })
+      } catch (error) {
+        reject("financialPaymnent.insert:" + error);
+      }
     });
     return promise;
   }
@@ -31,8 +51,34 @@ class FinancialPaymnetController extends Base {
           resolve(data);
         })
         .catch(err => {
-          reject("financialPaymnent.getlist: " + err);
+          reject("financialPaymnent.getlist: " + error);
         });
+    });
+    return promise;
+  }
+
+  static getById(tb_institution_id, terminal, id) {
+    const promise = new Promise((resolve, reject) => {
+      try {
+        Tb.sequelize.query(
+          'select * ' +
+          'from tb_financial_payment ' +
+          'where (tb_institution_id =? ) ' +
+          ' and (terminal =?)'+
+          ' and (id = ? )',
+          {
+            replacements: [tb_institution_id, terminal, id],
+            type: Tb.sequelize.QueryTypes.SELECT
+          }).then(data => {
+            if (data.length > 0) {
+              resolve(data[0]);
+            } else {
+              resolve({ id: 0 });
+            }
+          })
+      } catch (error) {
+        reject('financialPayment.getById: ' + error);
+      }
     });
     return promise;
   }
@@ -52,27 +98,28 @@ class FinancialPaymnetController extends Base {
           resolve(data);
         })
         .catch(err => {
-          reject("financialPayment.get: " + err);
+          reject("financialPayment.get: " + error);
         });
     });
     return promise;
   }
 
-  static async update(order) {
+  static async update(body) {
     const promise = new Promise((resolve, reject) => {
-      Tb.update(order, {
-        where: {
-          id: order.id,
-          tb_institution_id: order.tb_institution_id,
-          terminal: order.terminal
-        }
-      })
-        .then(data => {
-          resolve(data);
+      try {
+        Tb.update(body, {
+          where: {
+            id: body.id,
+            tb_institution_id: body.tb_institution_id,
+            terminal: body.terminal
+          }
         })
-        .catch(err => {
-          reject("financialPaymnent.update:" + err);
-        });
+          .then(data => {
+            resolve(data);
+          })
+      } catch (error) {
+        reject("financialPaymnent.update:" + error);
+      }
     });
     return promise;
   }
@@ -137,7 +184,7 @@ class FinancialPaymnetController extends Base {
         for (var item of body.Payments) {
           if (item.value > 0) {
             dataFinancial.parcel += dataFinancial.parcel;
-            dataFinancial.tb_payment_types_id = item.tb_payment_type_id;
+            dataFinancial.tb_payment_types_id = item.tb_payment_types_id;
             if ((item.name_payment_type = 'DINHEIRO') && (body.order.change_value > 0)) {
               dataFinancial.paid_value = item.value - body.order.change_value;
             } else {

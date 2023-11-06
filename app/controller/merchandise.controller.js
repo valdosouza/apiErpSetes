@@ -65,14 +65,14 @@ class MerchandiseController extends Base {
 
 
 
-  static async getbyDescription(descripton) {
+  static async getbyDescription(description) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         'Select id ' +
         'from tb_merchandise ' +
         'WHERE ( description =? ) ',
         {
-          replacements: [descripton],
+          replacements: [description],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           if (data[0] != null)

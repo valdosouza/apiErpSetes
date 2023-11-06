@@ -17,14 +17,14 @@ class PackageController extends Base {
     return promise;
   }
 
-  static async getbyDescription(descripton) {
+  static async getbyDescription(description) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         'Select id ' +
         'from tb_package ' +
         'WHERE ( description =? ) ',
         {
-          replacements: [descripton],
+          replacements: [description],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           if (data.length > 0)

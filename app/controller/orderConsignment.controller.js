@@ -294,7 +294,7 @@ class OrderConsignmentController extends Base {
               id: body.order.id,
               tb_institution_id: body.order.tb_institution_id,
               terminal: 0,
-              tb_payment_type_id: item.tb_payment_type_id,
+              tb_payment_types_id: item.tb_payment_types_id,
               value: item.value
 
             };

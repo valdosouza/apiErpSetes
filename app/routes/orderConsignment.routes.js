@@ -73,11 +73,11 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *     OrderPaid:
  *       type: object
  *       required:
- *         - tb_payment_type_id
+ *         - tb_payment_types_id
  *         - description
  *         - value
  *       properties:
- *         tb_payment_type_id:
+ *         tb_payment_types_id:
  *           type : integer
  *         name_payment_type:
  *           type: string

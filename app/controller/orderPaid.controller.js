@@ -4,16 +4,16 @@ const Tb = db.orderpaid;
 
 class OrderPaidController extends Base {
 
-  static async getById(id, tb_institution_id, tb_payment_type_id) {
+  static async getById(id, tb_institution_id, tb_payment_types_id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         'Select * ' +
         'from tb_order_paid ' +
         'where ( id =?) ' +
         ' and (tb_institution_id =?)' +
-        ' and (tb_payment_type_id =?)',
+        ' and (tb_payment_types_id =?)',
         {
-          replacements: [id, tb_institution_id, tb_payment_type_id],
+          replacements: [id, tb_institution_id, tb_payment_types_id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           resolve(data[0]);
@@ -29,7 +29,7 @@ class OrderPaidController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var resultOrder = [];
-        resultOrder = await this.getById(body.id, body.tb_institution_id, body.tb_payment_type_id);
+        resultOrder = await this.getById(body.id, body.tb_institution_id, body.tb_payment_types_id);
         if (resultOrder.length == 0) {
           this.insert(body)
             .then(data => {
@@ -109,7 +109,7 @@ class OrderPaidController extends Base {
           id: body.tb_order_id,
           tb_institution_id: body.tb_institution_id,
           terminal: 0,
-          tb_payment_type_id_id: body.tb_payment_type_id,
+          tb_payment_types_id_id: body.tb_payment_types_id,
           kind: dataOrder.kind
         }
       })

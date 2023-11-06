@@ -4,6 +4,15 @@ const {
 
 module.exports = sequelize => {
   const attributes = {
+    id: {
+      type: DataTypes.INTEGER(11),
+      allowNull: false,
+      defaultValue: null,
+      primaryKey: true,
+      autoIncrement: false,
+      comment: null,
+      field: "id"
+    },
     tb_institution_id: {
       type: DataTypes.INTEGER(11),
       allowNull: false,
@@ -67,6 +76,15 @@ module.exports = sequelize => {
       comment: null,
       field: "discount_value"
     },
+    discount_aliquot: {
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: null,
+      field: "discount_aliquot"
+    },    
     paid_value: {
       type: DataTypes.DECIMAL,
       allowNull: true,

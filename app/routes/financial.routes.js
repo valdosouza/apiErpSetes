@@ -10,16 +10,46 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * @swagger
  * components:
  *   schemas:
- *     FinancialStatement:
+ *     financial:
  *       type: object
  *       properties:
- *         description:
- *           type: string
+ *         id:
+ *           type: integer
+ *         tb_institution_id:
+ *           type: integer
+ *         tb_order_id:
+ *           type: integer
+ *         terminal:
+ *           type: integer
+ *         parcel:
+ *           type: integer
  *         tag_value:
  *           type: number
+ *         dt_expiration:
+ *           type: string
+ *         tb_payment_types_id:
+ *           type: integer
+ *         number:
+ *           type: string
  *         kind:
- *           type: string 
+ *           type: string
+ *         situation:
+ *           type: string
+ *         operation:
+ *           type: string
+ *         stage:
+ *           type: string
+ *         tb_financial_plans_id:
+ *           type: integer
  *
+ *     obj_financial:
+ *       type: object
+ *       properties:
+ *         financial:
+ *           $ref: '#/components/schemas/financial'
+ *         financial_payment:
+ *           $ref: '#/components/schemas/financial_payment'
+ * 
  * 
  *     FinancialListCustomerCharged:
  *       type: object
@@ -46,157 +76,26 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
 
  /**
  * @swagger
- * /financial/statement/getbyday/{tb_institution_id}/{tb_user_id}/{date}:
- *   get:
- *     summary: Returns the statement by day/user
+ * /financial/sync:
+ *   post:
+ *     summary: Create a new Financial
  *     tags: [Financial]
- *     parameters:
- *      - in: path
- *        name: tb_institution_id
- *      - in: path
- *        name: tb_user_id
- *      - in: path
- *        name: date
- *        schema:
- *          type: string
- *        required: true
- *        description: The financial tb_institution_id/tb_user_id/date
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/obj_financial'
  *     responses:
  *       200:
- *         description: The list of the Financial Statement
+ *         description: The Invoice was successfully created
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/FinancialStatement'
+ *               $ref: '#/components/schemas/result_message'
+ *       500:
+ *         description: Some server error
  */
+ router.post("/sync/", financial.sync);
 
-router.get("/statement/getbyday/:tb_institution_id/:tb_user_id/:date", financial.getbyday);
-  
-/**
- * @swagger
- * /financial/statement/getbymonth/{tb_institution_id}/{tb_user_id}/{date}:
- *   get:
- *     summary: Returns the statement by day/user
- *     tags: [Financial]
- *     parameters:
- *      - in: path
- *        name: tb_institution_id
- *      - in: path
- *        name: tb_user_id
- *      - in: path
- *        name: date
- *        schema:
- *          type: string
- *        required: true
- *        description: The financial tb_institution_id/tb_user_id/date -
- *     responses:
- *       200:
- *         description: The list of the Financial Statement
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/FinancialStatement'
- */
-
-router.get("/statement/getbymonth/:tb_institution_id/:tb_user_id/:date", financial.getbymonth);
-
-/**
- * @swagger
- * /financial/statement/getbycustomer/{tb_institution_id}/{tb_user_id}/{tb_customer_id}/{date}:
- *   get:
- *     summary: Returns the statement by day/user/customer
- *     tags: [Financial]
- *     parameters:
- *      - in: path
- *        name: tb_institution_id
- *        required: true 
- *      - in: path
- *        name: tb_user_id
- *        required: true  
- *      - in: path
- *        name: tb_customer_id
- *        required: true
- *      - in: path
- *        name: date
- *        required: true
- *     responses:
- *       200:
- *         description: The list of the Financial Statement
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/FinancialStatement'
- */
-
-router.get("/statement/getbycustomer/:tb_institution_id/:tb_user_id/:tb_customer_id/:date", financial.getbyDaybyCustomer);
-
-/**
- * @swagger
- * /financial/statement/getbyorder/{tb_institution_id}/{tb_user_id}/{tb_order_id}/{date}:
- *   get:
- *     summary: Returns the statement by day/user/customer
- *     tags: [Financial]
- *     parameters:
- *      - in: path
- *        name: tb_institution_id
- *        required: true 
- *      - in: path
- *        name: tb_user_id
- *        required: true  
- *      - in: path
- *        name: tb_order_id
- *        required: true
- *      - in: path
- *        name: date
- *        required: true
- *     responses:
- *       200:
- *         description: The list of the Financial Statement
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/FinancialStatement'
- */
-
-router.get("/statement/getbyorder/:tb_institution_id/:tb_user_id/:tb_order_id/:date", financial.getbyDaybyOrder);
-
-/**
- * @swagger
- * /financial/customer/charged/getlist/{tb_institution_id}/{tb_user_id}/{date}:
- *   get:
- *     summary: Returns the list of customers charged
- *     tags: [Financial]
- *     parameters:
- *      - in: path
- *        name: tb_institution_id
- *        required: true 
- *      - in: path
- *        name: tb_user_id
- *        required: true  
- *      - in: path
- *        name: date
- *        required: true
- *     responses:
- *       200:
- *         description: The list of customer that was charged
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/FinancialListCustomerCharged'
- */
-
-router.get("/customer/charged/getlist/:tb_institution_id/:tb_user_id/:date", financial.getlistCustomercharge);
-
-
-
-module.exports = router;
+ module.exports = router;

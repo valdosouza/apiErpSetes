@@ -31,14 +31,14 @@ const {
         comment: null,
         field: "terminal"
       },
-      tb_payment_type_id: {
+      tb_payment_types_id: {
         type: DataTypes.INTEGER(11),
         allowNull: false,
         defaultValue: null,
         primaryKey: true,
         autoIncrement: false,
         comment: null,
-        field: "tb_payment_type_id"
+        field: "tb_payment_types_id"
       },
       dt_expiration: {
         type: DataTypes.DATEONLY,

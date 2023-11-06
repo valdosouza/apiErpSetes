@@ -18,7 +18,7 @@ class CategoryController extends Base {
     return promise;
   }
 
-  static async getbyDescription(descripton, tb_institution_id) {
+  static async getbyDescription(description, tb_institution_id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         'Select id ' +
@@ -26,7 +26,7 @@ class CategoryController extends Base {
         'WHERE ( description =? ) ' +
         ' and (tb_institution_id = ?)',
         {
-          replacements: [descripton, tb_institution_id],
+          replacements: [description, tb_institution_id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           if (data[0] != null)

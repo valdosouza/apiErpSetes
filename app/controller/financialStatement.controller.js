@@ -7,6 +7,21 @@ const OrderConsigngmentController = require('../controller/orderConsignment.cont
 
 class FinancialStatementController extends Base {
 
+  static async sync(body) {
+    const promise = new Promise(async (resolve, reject) => {
+      try {        
+        resolve({
+          code: body.id,
+          id: 200,
+          Message: "SYNCHED"
+        });
+      } catch (error) {
+        reject("FinancialStatementController.sync:" + error);
+      }
+    });
+    return promise;
+  }
+
   static async insert(body) {
     const promise = new Promise(async (resolve, reject) => {
       Tb.create(body)
@@ -441,7 +456,7 @@ class FinancialStatementController extends Base {
         }
         for (var item of body.Payments) {
           if (item.value > 0) {
-            dataFinancial.tb_payment_types_id = item.tb_payment_type_id;
+            dataFinancial.tb_payment_types_id = item.tb_payment_types_id;
             if ((item.name_payment_type = 'DINHEIRO') && (body.order.change_value > 0)) {
               dataFinancial.credit_value = item.value - body.order.change_value;
             } else {
