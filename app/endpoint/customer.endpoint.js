@@ -26,39 +26,39 @@ class CustomerEndPoint {
     try {
       var docNumber = "";
       var docKind = "";
-      if (req.body.person) {
-        docNumber = req.body.person.cpf;
+      if (req.body.fiscal.person) {
+        docNumber = req.body.fiscal.person.cpf;
         docKind = "F";
       }
       if (docNumber == "") {
-        docNumber = req.body.company.cnpj;
+        docNumber = req.body.fiscal.company.cnpj;
         docKind = "J";
       }
       
       fiscalController.getByDocNumber(req.body.customer.tb_institution_id, docNumber)
         .then(dataDocnumber => {
-          if ((dataDocnumber.length == 0) || (dataDocnumber.tb_salesman_id == req.body.customer.tb_salesman_id)) {
+          if ((dataDocnumber.id == 0) || (dataDocnumber.tb_salesman_id == req.body.customer.tb_salesman_id)) {
             
             CustomerController.save(req.body)
               .then(data => {
                 var dataRes = {
-                  id: data.entity.id,
-                  name_company: data.entity.name_company,
-                  nick_trade: data.entity.nick_trade,
+                  id: data.fiscal.obj_entity.entity.id,
+                  name_company: data.fiscal.obj_entity.entity.name_company,
+                  nick_trade: data.fiscal.obj_entity.entity.nick_trade,
                   doc_kind: "",
                   doc_number: "",
                   error:"",
                 };
                 if (data.person) {
-                  if (data.person.id > 0) {
+                  if (data.fiscal.person.id > 0) {
                     dataRes.doc_kind = "F";
-                    dataRes.doc_number = data.person.cpf;
+                    dataRes.doc_number = data.fiscal.person.cpf;
                   }
                 }
-                if (data.company) {
-                  if (data.company.id > 0) {
+                if (data.fiscal.company) {
+                  if (data.fiscal.company.id > 0) {
                     dataRes.doc_kind = "J";
-                    dataRes.doc_number = data.company.cnpj;
+                    dataRes.doc_number = data.fiscal.company.cnpj;
                   }
                 }
                 res.send(dataRes);
@@ -66,8 +66,8 @@ class CustomerEndPoint {
           } else {
             var dataRes = {
               id: 0,
-              name_company: req.body.entity.name_company,
-              nick_trade: req.body.entity.nick_trade,
+              name_company: req.body.fiscal.obj_entity.entity.name_company,
+              nick_trade: req.body.fiscal.obj_entity.entity.nick_trade,
               doc_kind: docKind,
               doc_number: docNumber,
               error:"Este Cliente pertence a outro vendedor",

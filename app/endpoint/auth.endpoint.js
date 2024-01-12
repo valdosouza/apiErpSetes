@@ -11,7 +11,7 @@ class AuthEndPoint {
       return res.status(400).send('Informe usuário e senha!')
     }
     
-    MailingController.findOne(req.body.email)
+    MailingController.getByEmail(req.body.email)
       .then(data => {
         if (!data) return res.send("'e-mail não encontrado!'");
       })
@@ -26,7 +26,8 @@ class AuthEndPoint {
           "tb_institution_id" : 0,
           "username" : '',
           "password": '',
-          "jwt": '' };              
+          "jwt": '',
+          "message": 'Usuário ou senha inválidos'};              
           return res.json(dataReturn);
         }
         UserController.generateJWT(data)

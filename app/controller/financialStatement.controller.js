@@ -4,12 +4,23 @@ const { DOUBLE } = require('sequelize');
 const Tb = db.financialStatement;
 const DateFunction = require('../util/dateFunction.js');
 const OrderConsigngmentController = require('../controller/orderConsignment.controller.js');
+const PaymentTypeController = require('./paymentType.controller.js')
 
 class FinancialStatementController extends Base {
 
   static async sync(body) {
     const promise = new Promise(async (resolve, reject) => {
-      try {        
+      try {
+        var regFinancial = await this.getById(body.financial_statement.tb_institution_id, body.financial_statement.terminal, body.financial_statement.id);
+
+        var regPaymentType = await PaymentTypeController.getIdByDescription(body.desc_payment_type);
+        body.financial_statement.tb_payment_types_id = regPaymentType.id;
+        if (regFinancial.id == 0) {
+          await this.insert(body.financial_statement);
+        } else {
+          await this.update(body.financial_statement);
+        }
+
         resolve({
           code: body.id,
           id: 200,
@@ -24,19 +35,65 @@ class FinancialStatementController extends Base {
 
   static async insert(body) {
     const promise = new Promise(async (resolve, reject) => {
-      Tb.create(body)
+      try {
+        Tb.create(body)
         .then((data) => {
           resolve(data);
-        })
-        .catch(err => {
-          reject("FinancialStatement.insert:" + err);
-        });
+        })        
+      } catch (error) {
+        reject("FinancialStatement.insert:" + error);        
+      }        
     });
     return promise;
   }
 
+  static async update(financial) {
+    const promise = new Promise((resolve, reject) => {
+      try {
+        Tb.update(financial, {
+          where: {
+            id: financial.id,
+            tb_institution_id: financial.tb_institution_id,
+            terminal: financial.terminal
+          }
+        })
+          .then(data => {
+            resolve(data);
+          })
+      } catch (error) {
+        reject("financialStatement.update:" + error);
+      }
+    });
+    return promise;
+  }
 
-  static get(tb_institution_id, tb_salesman_id, tb_customer_id, dt_record, kind_date,tb_order_id) {
+  static getById(tb_institution_id,terminal, id) {
+    const promise = new Promise((resolve, reject) => {
+      try {
+        Tb.sequelize.query(
+          'select * ' +
+          'from tb_financial_statement ' +
+          'where (tb_institution_id =? ) ' +
+          ' and (terminal =?)'+
+          ' and (id =? )',
+          {
+            replacements: [tb_institution_id, terminal, id],
+            type: Tb.sequelize.QueryTypes.SELECT
+          }).then(data => {
+            if (data.length > 0) {
+              resolve(data[0]);
+            } else {
+              resolve({ id: 0 });
+            }
+          })
+      } catch (error) {
+        reject('financialController.getById: ' + error);
+      }
+    });
+    return promise;
+  }
+
+  static get(tb_institution_id, tb_salesman_id, tb_customer_id, dt_record, kind_date, tb_order_id) {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var dataini = dt_record;
@@ -48,8 +105,8 @@ class FinancialStatementController extends Base {
           datafim = DateFunction.lastDayMonth(dt_record);
         }
         var dataOrdersale = [];
-        
-        dataOrdersale = await FinancialStatementController.getOrderSales(tb_institution_id, tb_salesman_id, tb_customer_id, dataini, datafim,tb_order_id);
+
+        dataOrdersale = await FinancialStatementController.getOrderSales(tb_institution_id, tb_salesman_id, tb_customer_id, dataini, datafim, tb_order_id);
 
         var dataTotalVenda = {
           description: "Total de Vendas",
@@ -59,7 +116,7 @@ class FinancialStatementController extends Base {
         };
         //Divida Velha é toda divida anterior a data Informada, no caso dt_record ou se a consulta for mensal dataini
         var dataDividaVelha = {};
-        dataDividaVelha = await OrderConsigngmentController.getDividaVelhaBySalesman(tb_institution_id, tb_salesman_id,tb_customer_id,dataini,tb_order_id);
+        dataDividaVelha = await OrderConsigngmentController.getDividaVelhaBySalesman(tb_institution_id, tb_salesman_id, tb_customer_id, dataini, tb_order_id);
 
         //var dataDividaAtual = {};        
         //dataDividaAtual = await OrderConsigngmentController.getDividaAtualBySalesman(tb_institution_id, tb_salesman_id,0, dt_record);
@@ -72,7 +129,7 @@ class FinancialStatementController extends Base {
         };
 
         var dataFinancialReceived = [];
-        dataFinancialReceived = await FinancialStatementController.getFinancialReceived(tb_institution_id, tb_salesman_id, tb_customer_id, dataini, datafim,tb_order_id);
+        dataFinancialReceived = await FinancialStatementController.getFinancialReceived(tb_institution_id, tb_salesman_id, tb_customer_id, dataini, datafim, tb_order_id);
 
         var dataTotalRecebido = {
           description: "Total Recebido",
@@ -103,7 +160,7 @@ class FinancialStatementController extends Base {
     return promise;
   }
 
-  static getOrderSales(tb_institution_id, tb_salesman_id, tb_customer_id, dataini, datafim,tb_order_id) {
+  static getOrderSales(tb_institution_id, tb_salesman_id, tb_customer_id, dataini, datafim, tb_order_id) {
     const promise = new Promise((resolve, reject) => {
 
       var sqltxt =
@@ -123,7 +180,7 @@ class FinancialStatementController extends Base {
       } else {
         sqltxt = sqltxt + ' and (ors.tb_customer_id = ?) ';
       };
-      
+
       if (tb_order_id == 0) {
         sqltxt = sqltxt + ' and (ors.id <> ?) ';
       } else {
@@ -139,7 +196,7 @@ class FinancialStatementController extends Base {
       Tb.sequelize.query(
         sqltxt,
         {
-          replacements: [tb_institution_id, tb_salesman_id, tb_customer_id, tb_order_id,dataini, datafim, 'sale'],
+          replacements: [tb_institution_id, tb_salesman_id, tb_customer_id, tb_order_id, dataini, datafim, 'sale'],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           var dataResult = [];
@@ -225,20 +282,20 @@ class FinancialStatementController extends Base {
     return promise;
   }
 
-  static getFinancialReceived(tb_institution_id, tb_salesman_id, tb_customer_id, dataini, datafim,tb_order_id) {
+  static getFinancialReceived(tb_institution_id, tb_salesman_id, tb_customer_id, dataini, datafim, tb_order_id) {
     const promise = new Promise((resolve, reject) => {
       var sqltxt =
-      'select pmt.description name_payment_type, sum(fnl.tag_value) subtotal, "Total Recebido" kind, "blue" color  '+
-      'from tb_financial fnl  '+
-      '  inner join tb_order ord '+
-      '  on (ord.id = fnl.tb_order_id) '+
-   
-      '   inner join tb_customer ct '+
-      '   on (fnl.tb_entity_id = ct.id) '+
-      '   inner join tb_payment_types pmt  '+
-      '   on (pmt.id = fnl.tb_payment_types_id)  '+
-      'where (fnl.tb_institution_id =? )  '+
-      ' and (ct.tb_salesman_id =?) ';
+        'select pmt.description name_payment_type, sum(fnl.tag_value) subtotal, "Total Recebido" kind, "blue" color  ' +
+        'from tb_financial fnl  ' +
+        '  inner join tb_order ord ' +
+        '  on (ord.id = fnl.tb_order_id) ' +
+
+        '   inner join tb_customer ct ' +
+        '   on (fnl.tb_entity_id = ct.id) ' +
+        '   inner join tb_payment_types pmt  ' +
+        '   on (pmt.id = fnl.tb_payment_types_id)  ' +
+        'where (fnl.tb_institution_id =? )  ' +
+        ' and (ct.tb_salesman_id =?) ';
       if (tb_customer_id == 0) {
         sqltxt = sqltxt + ' and (fnl.tb_entity_id <> ?) ';
       } else {
@@ -258,7 +315,7 @@ class FinancialStatementController extends Base {
       Tb.sequelize.query(
         sqltxt,
         {
-          replacements: [tb_institution_id, tb_salesman_id, tb_customer_id,tb_order_id, dataini, datafim],
+          replacements: [tb_institution_id, tb_salesman_id, tb_customer_id, tb_order_id, dataini, datafim],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           var dataResult = [];
@@ -313,34 +370,34 @@ class FinancialStatementController extends Base {
     const promise = new Promise((resolve, reject) => {
 
       var sqltxt =
-      ' select ora.id tb_order_id, etd.id, etd.nick_trade  name_customer, CAST(ord.note AS CHAR(1000) CHARACTER SET utf8) note,'+  
-      ' SUBSTRING(time(ora.created_at), 1, 5) time_attendace, coalesce(sum(fnl.tag_value),0) as  value_charged '+
-      ' from tb_order_attendance ora  '+
-      '   inner join tb_order ord'+
-      '   on (ord.id = ora.id)  '+
-      '     and (ord.tb_institution_id = ora.tb_institution_id)  '+
-      
-      '   inner join tb_customer ct '+
-      '   on (ct.id = ora.tb_customer_id) '+
-           
-      '   inner join tb_entity etd  '+
-      '   on (etd.id = ora.tb_customer_id)   '+
-      
-      '   left outer join  tb_financial fnl'+
-      '   on (fnl.tb_order_id = ora.id) '+
-      '     and (fnl.tb_institution_id = ora.tb_institution_id) '+
-      ' where (ora.tb_institution_id = ? )'+
-      '  and (ct.tb_salesman_id = ?)'+
-      '  and (ord.dt_record between ? and ?) '+
-      ' group by 1,2,3 ,4,5'+
-      ' order by 5 ';
+        ' select ora.id tb_order_id, etd.id, etd.nick_trade  name_customer, CAST(ord.note AS CHAR(1000) CHARACTER SET utf8) note,' +
+        ' SUBSTRING(time(ora.created_at), 1, 5) time_attendace, coalesce(sum(fnl.tag_value),0) as  value_charged ' +
+        ' from tb_order_attendance ora  ' +
+        '   inner join tb_order ord' +
+        '   on (ord.id = ora.id)  ' +
+        '     and (ord.tb_institution_id = ora.tb_institution_id)  ' +
+
+        '   inner join tb_customer ct ' +
+        '   on (ct.id = ora.tb_customer_id) ' +
+
+        '   inner join tb_entity etd  ' +
+        '   on (etd.id = ora.tb_customer_id)   ' +
+
+        '   left outer join  tb_financial fnl' +
+        '   on (fnl.tb_order_id = ora.id) ' +
+        '     and (fnl.tb_institution_id = ora.tb_institution_id) ' +
+        ' where (ora.tb_institution_id = ? )' +
+        '  and (ct.tb_salesman_id = ?)' +
+        '  and (ord.dt_record between ? and ?) ' +
+        ' group by 1,2,3 ,4,5' +
+        ' order by 5 ';
 
 
       // 'select etd.id, etd.name_company  name_customer, SUBSTRING(time(ora.created_at), 1, 5) time_attendace, sum(fnl.tag_value) value_charged  '+
       // 'from  tb_financial fnl '+
       // '   inner join tb_customer ct '+
       // '   on (ct.id = fnl.tb_entity_id) '+
-      
+
       // '   inner join tb_entity etd  '+
       // '   on (etd.id = fnl.tb_entity_id)   '+
       // '   inner join tb_order_attendance ora  '+
@@ -371,19 +428,19 @@ class FinancialStatementController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         Tb.sequelize.query(
-          'select '+
-          'fnl.dt_record,  '+
-          'pt.description name_payment_type,  '+
-          'sum(fnl.tag_value) balance_value  '+
-          'From tb_financial fnl '+
-          '  inner join tb_order ord  '+
-          '  on (ord.id = fnl.tb_order_id) '+
-          '  and (ord.tb_institution_id = fnl.tb_institution_id) '+
-          '  inner join tb_payment_types pt  '+
-          '  on (pt.id = fnl.tb_payment_types_id)  '+
-          'where ( fnl.tb_institution_id =? )  '+
-          'and ( ord.tb_user_id =? )  '+
-          'and ( fnl.dt_record =? )  '+
+          'select ' +
+          'fnl.dt_record,  ' +
+          'pt.description name_payment_type,  ' +
+          'sum(fnl.tag_value) balance_value  ' +
+          'From tb_financial fnl ' +
+          '  inner join tb_order ord  ' +
+          '  on (ord.id = fnl.tb_order_id) ' +
+          '  and (ord.tb_institution_id = fnl.tb_institution_id) ' +
+          '  inner join tb_payment_types pt  ' +
+          '  on (pt.id = fnl.tb_payment_types_id)  ' +
+          'where ( fnl.tb_institution_id =? )  ' +
+          'and ( ord.tb_user_id =? )  ' +
+          'and ( fnl.dt_record =? )  ' +
           'group by 1,2  ',
           {
             replacements: [tb_institution_id, tb_user_id, dt_record],

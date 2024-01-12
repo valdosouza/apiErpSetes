@@ -3,6 +3,11 @@ const db = require("../model");
 const Tb = db.customer;
 const fiscalController = require('./fiscal.controller.js');
 const EntityExtenralCode = require('./entityExternalCode.controller.js');
+const entity = require('./entity.controller.js');
+const company = require('./company.controller.js');
+const person = require('./person.controller.js');
+const address = require('./address.controller.js');
+const phone = require('./phone.controller.js');
 
 class CustomerController extends Base {
 
@@ -84,7 +89,7 @@ class CustomerController extends Base {
   static async save(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-
+        console.log("save");
         var resultCustomer = [];
         if (body.customer.id > 0)
           resultCustomer = await this.getById(body.customer.tb_institution_id, body.customer.id);
@@ -112,12 +117,12 @@ class CustomerController extends Base {
       try {
         var resultDoc = [];
 
-        if (body.person) {
-          if (body.person.cpf != "") {
-            resultDoc = await person.getByCPF(body.person.cpf);
+        if (body.fiscal.person) {
+          if (body.fiscal.person.cpf != "") {
+            resultDoc = await person.getByCPF(body.fiscal.person.cpf);
           }
         } else {
-          resultDoc = await company.getByCNPJ(body.company.cnpj);
+          resultDoc = await company.getByCNPJ(body.fiscal.company.cnpj);
         }
         if (resultDoc.length == 0) {
           this.insertComplete(body)
@@ -141,57 +146,45 @@ class CustomerController extends Base {
   static async insertComplete(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        entity.insert(body.entity)
+        entity.insert(body.fiscal.obj_entity.entity)
           .then(data => {
-            body.entity.id = data.id;
+            body.fiscal.obj_entity.entity.id = data.id;
             //Salva a pessoa Juridica                        
-            if (body.company.cnpj != "") {
-              body.company.id = body.entity.id;
-              company.insert(body.company)
+            if (body.fiscal.company.cnpj != "") {
+              body.fiscal.company.id = body.fiscal.obj_entity.entity.id;
+              company.insert(body.fiscal.company)
                 .catch(err => {
                   reject("Erro:" + err);
                 });
             } else {
-              body.person.id = body.entity.id;
-              person.insert(body.person)
+              body.fiscal.person.id = body.fiscal.obj_entity.entity.id;
+              person.insert(body.fiscal.person)
                 .catch(err => {
                   reject("Erro:" + err);
                 });
             }
 
             //Salva o endereço  
-            body.address.id = body.entity.id
-            address.insert(body.address)
+            body.fiscal.obj_entity.address_list[0].id = body.fiscal.obj_entity.entity.id
+            address.insert(body.fiscal.obj_entity.address_list[0])
               .catch(err => {
                 reject("Erro:" + err);
               });
 
             //Salva o Phone
-            body.phone.id = body.entity.id;
-            phone.insert(body.phone)
+            body.fiscal.obj_entity.phone_list[0].id = body.fiscal.obj_entity.entity.id;
+            phone.insert(body.fiscal.obj_entity.phone_list[0])
               .catch(err => {
                 reject("Erro:" + err);
               });
 
             //Grava o customer
-            body.customer.id = body.entity.id;
+            body.customer.id = body.fiscal.obj_entity.entity.id;
             Tb.create(body.customer)
               .catch(err => {
                 reject("Erro:" + err);
               });
 
-            //Salva o cliente na Rota de venda
-            const dataRoute = {
-              tb_institution_id: body.customer.tb_institution_id,
-              tb_sales_route_id: body.customer.tb_sales_route_id,
-              tb_customer_id: body.customer.id,
-              sequence: 0,
-              active: "S",
-            };
-            salesRouteCustomer.insert(dataRoute)
-              .catch(err => {
-                reject("Erro:" + err);
-              });
             //REtornogeral              
             resolve(body);
           })

@@ -1,7 +1,5 @@
-const { Router } = require("express");
-  
+const { Router } = require("express"); 
 const financial =  require("../endpoint/financial.endpoint.js");
-
 const { withJWTAuthMiddleware } = require("express-kun");
 const router = Router();
 

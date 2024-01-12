@@ -124,6 +124,9 @@ routes.use("/orderattendance", orderattendance);
 const financial = require("../routes/financial.routes");
 routes.use("/financial", financial);
 
+const financialstatement = require("../routes/financialStatement.routes");
+routes.use("/financialstatement", financialstatement);
+
 const cashier = require("../routes/cashier.routes");
 routes.use("/cashier", cashier);
 

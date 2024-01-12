@@ -164,6 +164,7 @@ class OrderSaleController extends Base {
   static async insert(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
+        console.log(body.order);
         orderController.insert(body.order)
           .then(async (data) => {
             body.order.id = data.id;

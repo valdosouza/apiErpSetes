@@ -58,15 +58,18 @@ class OrderBillingController extends Base {
 
   static async insert(body) {
     const promise = new Promise(async (resolve, reject) => {
-      try {
-        var billing = body.billing;
-        billing.tb_institution_id = body.order.tb_institution_id;
-        billing.id = body.order.id;
-        billing.terminal = body.order.terminal;
-        delete billing.name_payment;
-        await Tb.create(billing)
+      try {        
+        body.billing.tb_institution_id = body.order.tb_institution_id;
+        body.billing.id = body.order.id;
+        body.billing.terminal = body.order.terminal;
+        //delete body.order.billing.name_payment;
+        console.log(body);
+        console.log("--------------");
+        console.log(body.billing);
+
+        await Tb.create(body.billing)
           .then(() => {
-            resolve(billing);
+            resolve(body);
           });
       } catch (error) {
         reject("OrderBillingController.insert:" + error);

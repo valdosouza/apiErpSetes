@@ -263,4 +263,3 @@ router.get("/salesman/getlist/:tb_institution_id/:tb_salesman_id", customer.getL
 router.delete("/", customer.delete);
 
 module.exports = router;  
-
