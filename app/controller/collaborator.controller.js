@@ -279,23 +279,31 @@ class CollaboratorController extends Base {
     return promise;
   }
 
-  static async update(collaborator) {
-    const promise = new Promise((resolve, reject) => {
+  static async update(body) {
+    const promise = new Promise(async (resolve, reject) => {
       try {
-        entity.update(collaborator.entity);
+        
+       
+        entityController.update(body.fiscal.obj_entity.entity);
 
-        if (collaborator.person) {
-          person.update(collaborator.person);
+        if (body.fiscal.person.id > 0) {
+          personController.update(body.fiscal.person);
         } else {
-          company.update(collaborator.company);
+          companyController.update(body.fiscal.company);
         }
-        address.save(collaborator.address);
-        phone.save(collaborator.phone);
-
-        Tb.update(collaborator.collaborator, {
-          where: { id: collaborator.collaborator.id }
+        for (var item of body.fiscal.obj_entity.address_list ){
+          await addressController.save(item);
+        }
+        for (var item of body.fiscal.obj_entity.phone_list ){
+          await phoneController.save(item);
+        }        
+    
+        Tb.update(body.collaborator, {
+          where: { tb_institution_id: body.collaborator.tb_institution_id,
+                  id: body.collaborator.id
+           }
         });
-        resolve(collaborator);
+        resolve(body);
       } catch (err) {
         reject('Collaborator.update: ' + err);
       }
@@ -311,22 +319,8 @@ class CollaboratorController extends Base {
         const dataCollaborator = await this.getById(tb_institution_id, id);
         result.collaborator = dataCollaborator;
 
-        const dataEntity = await entityController.getById(id);
-        result.entity = dataEntity;
-
-        const dataPerson = await personController.getById(id);
-        if (dataPerson.id > 0) {
-          result.person = dataPerson;
-        }
-        const dataCompany = await companyController.getById(id);
-        if (dataCompany.id > 0) {
-          result.company = dataCompany;
-        }
-        const dataAddress = await addressController.getById(id);
-        result.address = dataAddress;
-
-        const dataPhone = await phoneController.getByKey(id, 'Comercial');
-        result.phone = dataPhone;
+        const dataFiscal = await fiscalController.get(tb_institution_id, id);
+        result.fiscal = dataFiscal;
 
         const userEmail = await userController.getEmailByEntity(id);
         result.user = { email: userEmail };

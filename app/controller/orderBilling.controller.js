@@ -63,9 +63,6 @@ class OrderBillingController extends Base {
         body.billing.id = body.order.id;
         body.billing.terminal = body.order.terminal;
         //delete body.order.billing.name_payment;
-        console.log(body);
-        console.log("--------------");
-        console.log(body.billing);
 
         await Tb.create(body.billing)
           .then(() => {

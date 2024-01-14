@@ -169,21 +169,53 @@ class AddressController extends Base {
     return promise;
   }
 
-  static getList() {
-    const promise = new Promise((resolve, reject) => {
-      Tb.sequelize
-        .query("select  * " + "from tb_address " + "where id is not null", {
-          type: Tb.sequelize.QueryTypes.SELECT,
-        })
-        .then((data) => {
-          resolve(data);
-        })
-        .catch((err) => {
-          reject(new Error("Address.getlist:" + err));
-        });
-    });
-    return promise;
-  }
+  static getList(id) {
+      const promise = new Promise((resolve, reject) => {
+        var sqltxt = 
+        Tb.sequelize
+          .query(
+            "Select  " +
+            "a.id, " +
+            "a.street, " +
+            "a.nmbr, " +
+            "a.complement, " +
+            "a.neighborhood, " +
+            "a.region, " +
+            "a.kind, " +
+            "a.zip_code, " +
+            "a.tb_country_id, " +
+            "cy.name name_country, " +
+            "a.tb_state_id, " +
+            "st.name name_state, " +
+            "a.tb_city_id, " +
+            "ct.name name_city, " +
+            "a.main, " +
+            "a.longitude, " +
+            "a.latitude, " +
+            "a.created_at, " +
+            "a.updated_at " +
+            "from tb_address a " +
+            "    inner join tb_city ct   " +
+            "    on (ct.id = a.tb_city_id)   " +
+            "    inner join tb_state st   " +
+            "    on (st.id = a.tb_state_id)   " +
+            "    inner join tb_country cy  " +
+            "    on (cy.id = a.tb_country_id)  " +
+            "where ( a.id =?) ",
+            {
+              replacements: [id],
+              type: Tb.sequelize.QueryTypes.SELECT,
+            }
+          )
+          .then((data) => {
+            resolve(data);
+          })
+          .catch((err) => {
+            reject("Address.getList: " + err);
+          });
+      });
+      return promise;
+    }
 
   static async update(address) {
     const promise = new Promise((resolve, reject) => {

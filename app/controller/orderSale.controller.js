@@ -6,7 +6,7 @@ const orderBilling = require('./orderBilling.controller.js');
 const orderTotalizer = require('./orderTotalizer.controller.js');
 const orderItemController = require('./orderItem.controller.js');
 const stockStatement = require('./stockStatement.controller.js');
-const EntityHasStockListController = require('./entityHasStockList.controller.js');
+const entityHasStockListController = require('./entityHasStockList.controller.js');
 const EntityExtenralCode = require('./entityExternalCode.controller.js');
 
 class OrderSaleController extends Base {
@@ -164,7 +164,6 @@ class OrderSaleController extends Base {
   static async insert(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        console.log(body.order);
         orderController.insert(body.order)
           .then(async (data) => {
             body.order.id = data.id;
@@ -514,7 +513,7 @@ class OrderSaleController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var dataItem = {};
-        var stock = await await EntityHasStockListController.getByEntity(body.order.tb_institution_id, body.sale.tb_salesman_id);
+        var stock = await entityHasStockListController.getByEntity(body.order.tb_institution_id, body.sale.tb_salesman_id);
         for (var item of body.items) {
           if (item.updateStatus != "") {
             dataItem = {

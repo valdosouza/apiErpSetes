@@ -1,11 +1,11 @@
-const CustomerController = require("../controller/customer.controller.js");
+const customerController = require("../controller/customer.controller.js");
 const fiscalController = require("../controller/fiscal.controller.js");
 
 class CustomerEndPoint {
 
   static sync = (req, res) => {
     try {
-      CustomerController.sync(req.body)
+      customerController.sync(req.body)
         .then(data => {
           res.send({
             code: data.code,
@@ -34,12 +34,30 @@ class CustomerEndPoint {
         docNumber = req.body.fiscal.company.cnpj;
         docKind = "J";
       }
-      
-      fiscalController.getByDocNumber(req.body.customer.tb_institution_id, docNumber)
-        .then(dataDocnumber => {
-          if ((dataDocnumber.id == 0) || (dataDocnumber.tb_salesman_id == req.body.customer.tb_salesman_id)) {
-            
-            CustomerController.save(req.body)
+
+      fiscalController.getByDocNumber(docNumber)
+        .then(async dataDocnumber => {          
+          var dataCustomer = {tb_salesman_id:0};
+          if (dataDocnumber.id > 0) {
+            dataCustomer = await customerController.getById(req.body.customer.tb_institution_id, dataDocnumber.id);
+          }          
+          if ((dataDocnumber.id == 0) || (dataCustomer.tb_salesman_id == 0) || (dataCustomer.tb_salesman_id == req.body.customer.tb_salesman_id)) {
+            if (dataDocnumber.id > 0){
+              req.body.customer.id = dataDocnumber.id;
+              req.body.fiscal.obj_entity.entity.id = dataDocnumber.id;
+              for(var i = 0; i < req.body.fiscal.obj_entity.address_list.length;i++){
+                req.body.fiscal.obj_entity.address_list[i].id = dataDocnumber.id;
+              }
+              for(var i = 0; i < req.body.fiscal.obj_entity.phone_list.length;i++){
+                req.body.fiscal.obj_entity.phone_list[i].id = dataDocnumber.id;
+              }
+              if (dataDocnumber.doc.length == 11){
+                req.body.fiscal.person.id = dataDocnumber.id;
+              }else{
+                req.body.fiscal.company.id = dataDocnumber.id;
+              }
+            }
+            customerController.save(req.body)
               .then(data => {
                 var dataRes = {
                   id: data.fiscal.obj_entity.entity.id,
@@ -47,7 +65,7 @@ class CustomerEndPoint {
                   nick_trade: data.fiscal.obj_entity.entity.nick_trade,
                   doc_kind: "",
                   doc_number: "",
-                  error:"",
+                  error: "",
                 };
                 if (data.person) {
                   if (data.fiscal.person.id > 0) {
@@ -70,10 +88,10 @@ class CustomerEndPoint {
               nick_trade: req.body.fiscal.obj_entity.entity.nick_trade,
               doc_kind: docKind,
               doc_number: docNumber,
-              error:"Este Cliente pertence a outro vendedor",
-            };            
+              error: "Este Cliente pertence a outro vendedor",
+            };
             res.status(201).json(dataRes);
-            
+
           }
         });
 
@@ -82,8 +100,8 @@ class CustomerEndPoint {
     }
   }
 
-  static getCustomer = (req, res) => {
-    CustomerController.getCustomer(req.params.tb_institution_id, req.params.id)
+  static get = (req, res) => {
+    customerController.get(req.params.tb_institution_id, req.params.id)
       .then(data => {
         res.send(data);
       })
@@ -96,7 +114,7 @@ class CustomerEndPoint {
       });
       return;
     }
-    CustomerController.getList(req.body)
+    customerController.getList(req.body)
       .then(data => {
         res.send(data);
       })
@@ -104,7 +122,7 @@ class CustomerEndPoint {
 
   static getListSalesRoute = (req, res) => {
 
-    CustomerController.getListSalesRoute(req.params.tb_institution_id, req.params.tb_sales_route_id, req.params.tb_salesman_id)
+    customerController.getListSalesRoute(req.params.tb_institution_id, req.params.tb_sales_route_id, req.params.tb_salesman_id)
       .then(data => {
         res.send(data);
       })
@@ -112,14 +130,14 @@ class CustomerEndPoint {
 
   static getListBySalesman = (req, res) => {
 
-    CustomerController.getListBySalesman(req.params.tb_institution_id, req.params.tb_salesman_id)
+    customerController.getListBySalesman(req.params.tb_institution_id, req.params.tb_salesman_id)
       .then(data => {
         res.send(data);
       })
   };
 
   static delete(req, res) {
-    CustomerController.delete(req.body).then(data => {
+    customerController.delete(req.body).then(data => {
       res.send(data);
     })
   }

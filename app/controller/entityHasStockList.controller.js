@@ -15,7 +15,7 @@ class EntityHasStockListController extends Base {
           var dataStockList = {
             id: 0,
             tb_institution_id: body.tb_institution_id,
-            description: body.name_entity.substr(0,45),
+            description: body.name_entity.substr(0, 45),
             main: "N",
             active: "S",
           }
@@ -39,7 +39,7 @@ class EntityHasStockListController extends Base {
         } catch (error) {
           reject("Erro:" + err);
         }
-      } else {        
+      } else {
         resolve(checkExist[0]);
       }
     });
@@ -80,8 +80,12 @@ class EntityHasStockListController extends Base {
           replacements: [tb_institution_id, tb_entity_id],
           type: Tb.sequelize.QueryTypes.SELECT
         })
-        .then(data => {          
-          resolve(data);
+        .then(data => {
+          if (data.length > 0) {
+            resolve(data[0]);
+          } else {
+            resolve({ tb_stock_list_id: 0 });
+          }
         })
         .catch(err => {
           reject('Entity.getById: ' + err);

@@ -158,7 +158,7 @@ router.post("/sync", customer.sync);
  *             schema: 
  *               $ref: '#/components/schemas/objCustomer'
  */
- router.get("/get/:tb_institution_id/:id", customer.getCustomer);
+ router.get("/get/:tb_institution_id/:id", customer.get);
   
 /**
  * @swagger

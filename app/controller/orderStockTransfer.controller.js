@@ -315,7 +315,7 @@ class OrderStockTransferController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var dataItem = {};
-        var stock = await await EntityHasStockListController.getByEntity(body.order.tb_institution_id, body.sale.tb_salesman_id);
+        var stock = await EntityHasStockListController.getByEntity(body.order.tb_institution_id, body.sale.tb_salesman_id);
         for (var item of body.items) {
           dataItem = {
             id: item.id,

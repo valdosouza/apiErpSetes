@@ -9,34 +9,34 @@ class CollaboratorEndPoint {
       CollaboratorController.save(req.body)
         .then(async data => {
           //verifica o cargo do Vendedor
-          var lineBusinessModel = await lineBusinessController.get(data.collaborator.tb_institution_id, data.entity.tb_linebusiness_id)
+          var lineBusinessModel = await lineBusinessController.get(data.collaborator.tb_institution_id, data.fiscal.obj_entity.entity.tb_linebusiness_id)
           if (lineBusinessModel.description.toLowerCase() === "Vendedor".toLowerCase()) {
             var dataEntityHasStockList = {
               tb_institution_id: data.collaborator.tb_institution_id,
-              tb_entity_id: data.entity.id,
-              name_entity: data.entity.nick_trade,
+              tb_entity_id: data.fiscal.obj_entity.entity.id,
+              name_entity: data.fiscal.obj_entity.entity.nick_trade,
             }
             await entityHasStockList.createAuto(dataEntityHasStockList);
           }
           var dataRes = {
-            id: data.entity.id,
-            name_company: data.entity.name_company,
-            nick_trade: data.entity.nick_trade,
+            id: data.fiscal.obj_entity.entity.id,
+            name_company: data.fiscal.obj_entity.entity.name_company,
+            nick_trade: data.fiscal.obj_entity.entity.nick_trade,
             doc_kind: "",
             doc_number: "",
             tb_linebusiness_id: lineBusinessModel.id,
             name_linebusiness: lineBusinessModel.description,
           };
-          if (data.person) {
-            if (data.person.id > 0) {
+          if (data.fiscal.person) {
+            if (data.fiscal.person.id > 0) {
               dataRes.doc_kind = "F";
-              dataRes.doc_number = data.person.cpf;
+              dataRes.doc_number = data.fiscal.person.cpf;
             }
           }
-          if (data.company) {
-            if (data.company.id > 0) {
+          if (data.fiscal.company) {
+            if (data.fiscal.company.id > 0) {
               dataRes.doc_kind = "J";
-              dataRes.doc_number = data.company.cnpj;
+              dataRes.doc_number = data.fiscal.company.cnpj;
             }
           }
           res.send(dataRes);

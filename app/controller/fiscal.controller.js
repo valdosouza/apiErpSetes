@@ -73,9 +73,9 @@ class FiscalController extends Base {
                 });
               });
           } else {
-            
+
             //caso não seja PJ vai gravar um registro de PF idenpendente do CPF correto
-            body.person.id = body.objEntity.entity.id;            
+            body.person.id = body.objEntity.entity.id;
             await this.updatePerson(body)
               .then(async (data) => {
                 body = data;
@@ -192,6 +192,33 @@ class FiscalController extends Base {
     return promise;
   };
 
-  
+  static get = (tb_institution_id, id) => {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+
+        var result = {};
+        
+        const dataEntity = await entityController.getObj(tb_institution_id, id);
+        result.obj_entity = dataEntity;
+
+        const dataPerson = await personController.getById(id);
+        if (dataPerson.id > 0) {
+          result.person = dataPerson;
+        }
+        const dataCompany = await companyController.getById(id);
+        if (dataCompany.id > 0) {
+          result.company = dataCompany;
+        }
+
+        resolve(result);
+      }
+      catch (err) {
+        reject('fiscal.get: ' + err);
+      }
+    });
+    return promise;
+  }
+
+
 }
 module.exports = FiscalController; 

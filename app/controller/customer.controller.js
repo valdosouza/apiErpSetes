@@ -2,12 +2,12 @@ const Base = require('./base.controller.js');
 const db = require("../model");
 const Tb = db.customer;
 const fiscalController = require('./fiscal.controller.js');
-const EntityExtenralCode = require('./entityExternalCode.controller.js');
-const entity = require('./entity.controller.js');
-const company = require('./company.controller.js');
-const person = require('./person.controller.js');
-const address = require('./address.controller.js');
-const phone = require('./phone.controller.js');
+const entityExtenralCode = require('./entityExternalCode.controller.js');
+const entityControler = require('./entity.controller.js');
+const companyControler = require('./company.controller.js');
+const personControler = require('./person.controller.js');
+const addressControler = require('./address.controller.js');
+const phoneControler = require('./phone.controller.js');
 
 class CustomerController extends Base {
 
@@ -17,9 +17,9 @@ class CustomerController extends Base {
 
         await fiscalController.sync(body.fiscal)
           .then(async (data) => {
-            if (body.fiscal.person)  body.fiscal.person = data.body.person;
+            if (body.fiscal.person) body.fiscal.person = data.body.person;
             if (body.fiscal.company) body.fiscal.company = data.body.company;
-            body.customer.tb_salesman_id = await EntityExtenralCode.getByExternalCode(
+            body.customer.tb_salesman_id = await entityExtenralCode.getByExternalCode(
               body.customer.tb_institution_id,
               body.customer.salesmanExternalCode,
               'COLABORADOR'
@@ -77,7 +77,10 @@ class CustomerController extends Base {
           if (data.length > 0)
             resolve(data[0])
           else
-            resolve({id:0});
+            resolve({
+              id: 0,
+              tb_salesman_id: 0,
+            });
         })
         .catch(err => {
           reject('getById: ' + err);
@@ -89,7 +92,6 @@ class CustomerController extends Base {
   static async save(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        console.log("save");
         var resultCustomer = [];
         if (body.customer.id > 0)
           resultCustomer = await this.getById(body.customer.tb_institution_id, body.customer.id);
@@ -119,10 +121,10 @@ class CustomerController extends Base {
 
         if (body.fiscal.person) {
           if (body.fiscal.person.cpf != "") {
-            resultDoc = await person.getByCPF(body.fiscal.person.cpf);
+            resultDoc = await personControler.getByCPF(body.fiscal.person.cpf);
           }
         } else {
-          resultDoc = await company.getByCNPJ(body.fiscal.company.cnpj);
+          resultDoc = await companyControler.getByCNPJ(body.fiscal.company.cnpj);
         }
         if (resultDoc.length == 0) {
           this.insertComplete(body)
@@ -146,19 +148,19 @@ class CustomerController extends Base {
   static async insertComplete(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        entity.insert(body.fiscal.obj_entity.entity)
+        entityControler.insert(body.fiscal.obj_entity.entity)
           .then(data => {
             body.fiscal.obj_entity.entity.id = data.id;
             //Salva a pessoa Juridica                        
             if (body.fiscal.company.cnpj != "") {
               body.fiscal.company.id = body.fiscal.obj_entity.entity.id;
-              company.insert(body.fiscal.company)
+              companyControler.insert(body.fiscal.company)
                 .catch(err => {
                   reject("Erro:" + err);
                 });
             } else {
               body.fiscal.person.id = body.fiscal.obj_entity.entity.id;
-              person.insert(body.fiscal.person)
+              personControler.insert(body.fiscal.person)
                 .catch(err => {
                   reject("Erro:" + err);
                 });
@@ -166,14 +168,14 @@ class CustomerController extends Base {
 
             //Salva o endereço  
             body.fiscal.obj_entity.address_list[0].id = body.fiscal.obj_entity.entity.id
-            address.insert(body.fiscal.obj_entity.address_list[0])
+            addressControler.insert(body.fiscal.obj_entity.address_list[0])
               .catch(err => {
                 reject("Erro:" + err);
               });
 
             //Salva o Phone
             body.fiscal.obj_entity.phone_list[0].id = body.fiscal.obj_entity.entity.id;
-            phone.insert(body.fiscal.obj_entity.phone_list[0])
+            phoneControler.insert(body.fiscal.obj_entity.phone_list[0])
               .catch(err => {
                 reject("Erro:" + err);
               });
@@ -204,43 +206,35 @@ class CustomerController extends Base {
         //Insere o customer
         const existCustomer = await this.getById(body.customer.tb_institution_id, body.customer.id);
         if (existCustomer.length == 0) {
-          Tb.create(body.customer);
+          await Tb.create(body.customer);
         } else {
-          Tb.update(body.customer, {
+          await Tb.update(body.customer, {
             where: { id: body.customer.id }
           });
         }
 
         //Atualiza Entidade    
         body.entity.id = body.customer.id;
-        entity.update(body.entity)
+        await entityControler.update(body.entity)
         //Atualiza  Person ou Company
         if (body.person) {
           body.person.id = body.customer.id;
-          company.update(body.person);
+          await companyControler.update(body.person);
         } else {
           body.company.id = body.customer.id;
-          person.update(body.company);
+          await personControler.update(body.company);
         }
         //Atualiza o endereço  
-        body.address.id = body.customer.id;
-        address.save(body.address);
-        //Salva o Phone
-        body.phone.id = body.customer.id;
-        phone.save(body.phone);
-        //Salva o cliente na Rota de venda
-        const dataRoute = {
-          tb_institution_id: body.customer.tb_institution_id,
-          tb_sales_route_id: body.customer.tb_sales_route_id,
-          tb_customer_id: body.customer.id,
-          sequence: 0,
-          active: "S"
-        };
-        salesRouteCustomer.insert(dataRoute)
-          .catch(err => {
-            reject("Erro:" + err);
-          });
 
+        for (var item of body.fiscal.obj_entity.address_list) {
+          item.id = body.customer.id;
+          await addressControler.save(item);
+        }
+        //Salva o Phone
+        for (var item of body.fiscal.obj_entity.phone_list) {
+          item.id = body.customer.id;
+          await phoneControler.save(item);
+        }
         //REtornogeral              
         resolve(body);
       } catch (err) {
@@ -252,33 +246,35 @@ class CustomerController extends Base {
 
 
   static async update(body) {
-    const promise = new Promise((resolve, reject) => {
+    const promise = new Promise(async (resolve, reject) => {
       try {
-        body.entity.id = body.customer.id
-        entity.update(body.entity);
+        body.fiscal.obj_entity.entity.id = body.customer.id
+        entityControler.update(body.fiscal.obj_entity.entity);
 
-        if (body.person) {
-          body.person.id = body.customer.id
-          person.update(body.person);
+        if (body.fiscal.person.id > 0) {
+          body.person.id = body.fiscal.customer.id
+          personControler.update(body.fiscal.person);
         } else {
-          body.company.id = body.customer.id
-          company.update(body.company);
+          body.fiscal.company.id = body.customer.id
+          companyControler.update(body.fiscal.company);
         }
-        body.address.id = body.customer.id
-        address.save(body.address);
-        body.phone.id = body.customer.id
-        phone.save(body.phone);
-        const dataRoute = {
-          tb_institution_id: body.customer.tb_institution_id,
-          tb_sales_route_id: body.customer.tb_sales_route_id,
-          tb_customer_id: body.customer.id,
-          sequence: 0,
-          active: "S"
-        };
-        salesRouteCustomer.update(dataRoute)
-        Tb.update(body.customer, {
-          where: { id: body.customer.id }
-        });
+        for (var item of body.fiscal.obj_entity.address_list) {
+          item.id = body.customer.id
+          await addressControler.save(item);
+        }
+        for (var item of body.fiscal.obj_entity.address_list) {
+          item.id = body.customer.id
+          phoneControler.save(item);
+        }
+        //Insere o customer
+        const existCustomer = await this.getById(body.customer.tb_institution_id, body.customer.id);
+        if (existCustomer.id == 0) {
+          Tb.create(body.customer);
+        } else {
+          Tb.update(body.customer, {
+            where: { id: body.customer.id }
+          });
+        }
         resolve(body);
       } catch (err) {
         reject('Customer.update: ' + err);
@@ -287,37 +283,20 @@ class CustomerController extends Base {
     return promise;
   }
 
-  static getCustomer = (tb_institution_id, id) => {
+  static get = (tb_institution_id, id) => {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var result = {};
         const dataCustomer = await this.getById(tb_institution_id, id);
-        var dataSalesRoute = await salesRouteCustomer.getByCustomer(tb_institution_id, id);
-        dataCustomer['tb_sales_route_id'] = dataSalesRoute.tb_sales_route_id;
-        dataCustomer['sales_route_name'] = dataSalesRoute.description;
         result.customer = dataCustomer;
 
-        const dataEntity = await entity.getById(id);
-        result.entity = dataEntity;
-
-        const dataPerson = await person.getById(id);
-        if (dataPerson.id) {
-          result.person = dataPerson;
-        }
-        const dataCompany = await company.getById(id);
-        if (dataCompany.id) {
-          result.company = dataCompany;
-        }
-        const dataAddress = await address.getById(id);
-        result.address = dataAddress;
-
-        const dataPhone = await phone.getById(id, '');
-        result.phone = dataPhone;
+        const dataFiscal = await fiscalController.get(tb_institution_id, id);
+        result.fiscal = dataFiscal;
 
         resolve(result);
       }
       catch (err) {
-        reject('getCustomer: ' + err);
+        reject('get: ' + err);
       }
     });
     return promise;
@@ -327,20 +306,20 @@ class CustomerController extends Base {
 
     const promise = new Promise((resolve, reject) => {
       var nick_trade = "";
-      var sqltxt =         
-      'Select ' +
-      'et.id,  ' +
-      'et.name_company,  ' +
-      'et.nick_trade, ' +
-      ' "F" doc_kind, ' +
-      'pe.cpf doc_number ' +
-      'from tb_customer ct  ' +
-      '  inner join tb_entity et  ' +
-      '  on (ct.id = et.id)  ' +
-      '  inner join tb_person pe ' +
-      '  on (pe.id = et.id) ' +
-      'where ct.tb_institution_id =? ' +
-      ' and (tb_salesman_id = ? ) ';
+      var sqltxt =
+        'Select ' +
+        'et.id,  ' +
+        'et.name_company,  ' +
+        'et.nick_trade, ' +
+        ' "F" doc_kind, ' +
+        'pe.cpf doc_number ' +
+        'from tb_customer ct  ' +
+        '  inner join tb_entity et  ' +
+        '  on (ct.id = et.id)  ' +
+        '  inner join tb_person pe ' +
+        '  on (pe.id = et.id) ' +
+        'where ct.tb_institution_id =? ' +
+        ' and (tb_salesman_id = ? ) ';
 
       if (body.name_customer != "") {
         nick_trade = '%' + body.name_customer + '%';
@@ -349,34 +328,34 @@ class CustomerController extends Base {
         nick_trade = "";
         sqltxt += ' and (et.nick_trade <> ?) ';
       }
-      sqltxt +=      
-      'union ' +
-      'Select  ' +
-      'et.id,  ' +
-      'et.name_company,  ' +
-      'et.nick_trade, ' +
-      ' "J" doc_kind, ' +
-      'co.cnpj doc_number ' +
-      'from tb_customer ct  ' +
-      '  inner join tb_entity et  ' +
-      '  on (ct.id = et.id)  ' +
-      '  inner join tb_company co ' +
-      '  on (co.id = et.id) ' +
-      'where ct.tb_institution_id =? '+
-      ' and (tb_salesman_id = ? ) ';
-      if (body.name_customer != "") {        
+      sqltxt +=
+        'union ' +
+        'Select  ' +
+        'et.id,  ' +
+        'et.name_company,  ' +
+        'et.nick_trade, ' +
+        ' "J" doc_kind, ' +
+        'co.cnpj doc_number ' +
+        'from tb_customer ct  ' +
+        '  inner join tb_entity et  ' +
+        '  on (ct.id = et.id)  ' +
+        '  inner join tb_company co ' +
+        '  on (co.id = et.id) ' +
+        'where ct.tb_institution_id =? ' +
+        ' and (tb_salesman_id = ? ) ';
+      if (body.name_customer != "") {
         sqltxt += ' and (et.nick_trade like ? ) ';
       } else {
         sqltxt += ' and (et.nick_trade <> ?) ';
       }
       sqltxt +=
         ' order by nick_trade ' +
-        ' limit ' + ((body.page - 1) * 20) + ',20 ';      
+        ' limit ' + ((body.page - 1) * 20) + ',20 ';
 
       Tb.sequelize.query(
         sqltxt,
         {
-          replacements: [body.tb_institution_id,body.tb_salesman_id,nick_trade, body.tb_institution_id,body.tb_salesman_id,nick_trade],
+          replacements: [body.tb_institution_id, body.tb_salesman_id, nick_trade, body.tb_institution_id, body.tb_salesman_id, nick_trade],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           resolve(data);

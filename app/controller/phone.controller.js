@@ -39,7 +39,7 @@ class PhoneController extends Base {
         var sqltxt =
           'Select * ' +
           'from tb_phone ' +
-          'where ( id =?) '+
+          'where ( id =?) ' +
           ' and  ( kind =?)';
         Tb.sequelize.query(
           sqltxt,
@@ -51,13 +51,33 @@ class PhoneController extends Base {
             if (data.length > 0)
               resolve(data[0])
             else
-              resolve({id:0});
+              resolve({ id: 0 });
           })
-          .catch(err => {
-            reject('Phone.getById: ' + err);
-          });
       } catch (err) {
         reject('Phone.getById: ' + err);
+      }
+    });
+    return promise;
+  }
+
+  static async getList(id) {
+    const promise = new Promise((resolve, reject) => {
+      try {
+        var sqltxt =
+          'Select * ' +
+          'from tb_phone ' +
+          'where ( id =?) ';
+        Tb.sequelize.query(
+          sqltxt,
+          {
+            replacements: [id],
+            type: Tb.sequelize.QueryTypes.SELECT
+          })
+          .then(data => {
+            resolve(data);
+          })
+      } catch (err) {
+        reject('Phone.getList: ' + err);
       }
     });
     return promise;
@@ -66,8 +86,8 @@ class PhoneController extends Base {
   static async save(phone) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        var resultPhone = await this.getById(phone.id, phone.kind);
-        if (resultPhone.length == 0) {
+        var resultPhone = await this.getByKey(phone.id, phone.kind);
+        if (resultPhone.id == 0) {
           this.insert(phone);
         } else {
           this.update(phone);

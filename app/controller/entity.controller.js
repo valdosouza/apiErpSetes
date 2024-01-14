@@ -11,7 +11,7 @@ class EntityController extends Base {
   static async sync(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        
+
         await Tb.update(body.entity, {
           where: {
             id: body.entity.id
@@ -169,6 +169,39 @@ class EntityController extends Base {
     });
     return promise;
   }
+
+  static getObj = (tb_institution_id, id) => {
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+
+        var result = {};
+        
+        const dataEntity = await this.getById(id);
+        result.entity = dataEntity;
+
+        const dataAddress = await addressController.getList(id);
+        result.address_list = dataAddress;
+
+        const dataPhone = await phoneController.getList(id);
+        result.phone_list = dataPhone;
+
+        result.description = "";
+        result.tb_institution_id = parseInt(tb_institution_id);
+        result.web_id = 0;
+        result.terminal = 0;
+        result.page = 0;
+        result.date_change = "";
+        result.cnpj_institution = "";
+
+        resolve(result);
+      }
+      catch (err) {
+        reject('entity.getObj: ' + err);
+      }
+    });
+    return promise;
+  }
+
 
 }
 module.exports = EntityController;
