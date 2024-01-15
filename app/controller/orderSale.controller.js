@@ -521,7 +521,7 @@ class OrderSaleController extends Base {
               tb_institution_id: body.order.tb_institution_id,
               tb_order_id: body.order.id,
               terminal: body.order.terminal,
-              tb_stock_list_id: stock[0].tb_stock_list_id,
+              tb_stock_list_id: stock.tb_stock_list_id,
               tb_price_list_id: item.tb_price_list_id,
               tb_product_id: item.tb_product_id,
               quantity: item.quantity,
