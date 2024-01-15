@@ -67,7 +67,8 @@ class ProdcutController extends Base {
         'p.active ' +
         'from tb_product p ' +
         'where (p.tb_institution_id =? ) ' +
-        ' and (p.active = ?)';
+        ' and (p.active = ?)'+
+        ' and (p.published = ?) ';
       if (body.name_product != "") {
         description = '%' + body.name_product + '%';
         sqltxt += ' and (p.description like ? ) ';
@@ -82,7 +83,7 @@ class ProdcutController extends Base {
       Tb.sequelize.query(
         sqltxt,
         {
-          replacements: [body.tb_institution_id, 'S', description],
+          replacements: [body.tb_institution_id, 'S','S', description],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           resolve(data);
