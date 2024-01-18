@@ -137,6 +137,30 @@ router.post("/", ordersale.create);
  * @swagger
  * /ordersale:
  *   put:
+ *     summary: Update a new ordersale
+ *     tags: [OrderSale]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/objOrderSale'
+ *     responses:
+ *       200:
+ *         description: The OrderSale was successfully Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/orderSale'
+ *       500:
+ *         description: Some server error
+ */
+router.put("/", ordersale.update);
+
+/**
+ * @swagger
+ * /ordersale:
+ *   put:
  *     summary: Update a ordersale
  *     tags: [OrderSale]
  *     requestBody:

@@ -515,7 +515,9 @@ class OrderSaleController extends Base {
         var dataItem = {};
         var stock = await entityHasStockListController.getByEntity(body.order.tb_institution_id, body.sale.tb_salesman_id);
         for (var item of body.items) {
+          
           if (item.updateStatus != "") {
+
             dataItem = {
               id: item.id,
               tb_institution_id: body.order.tb_institution_id,
@@ -524,14 +526,15 @@ class OrderSaleController extends Base {
               tb_stock_list_id: stock.tb_stock_list_id,
               tb_price_list_id: item.tb_price_list_id,
               tb_product_id: item.tb_product_id,
+              discount_aliquot: item.discount_aliquot,
+              discount_value: item.discount_value,
               quantity: item.quantity,
               unit_value: item.unit_value,
               kind: 'Sale',
             };
             //Quanto o insert é mais complexo como getNext precisa do no loop              
             switch (item.update_status) {
-              case "I":
-                
+              case "I":                
                 await orderItemController.insert(dataItem)
                   .then(data => {
                     item.id = data.id;

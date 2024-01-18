@@ -190,6 +190,7 @@ class OrderItemController extends Base {
 
   static async update(item) {
     const promise = new Promise((resolve, reject) => {
+      console.log(item);
       Tb.update(item, {
         where: { id: item.id, tb_institution_id: item.tb_institution_id, tb_order_id: item.tb_order_id }
       })
