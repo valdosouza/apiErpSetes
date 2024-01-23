@@ -1,6 +1,6 @@
 const { Router } = require("express");
   
-const orderbonus =  require("../endpoint/orderBonus.endpoint.js");
+const orderbonus =  require("../order_bonus/orderBonus.endpoint.js");
 
 const { withJWTAuthMiddleware } = require("express-kun");
 const router = Router();
@@ -10,113 +10,99 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  * @swagger
  * components:
  *   schemas:
- *     OrderBonus:
+ *     orderBonus:
  *       type: object
- *       required:
- *         - id
- *         - tb_institution_id
- *         - tb_user_id
- *         - tb_customer_id
- *         - tb_salesman_id
- *         - dt_record
- *         - status
  *       properties:
  *         id:
  *           type: integer
  *         tb_institution_id:
  *           type: integer
- *         tb_user_id:
+ *         terminal:
  *           type: integer
- *         dt_record:
- *           type: string
  *         number:
  *           type: integer
- *         tb_customer_id:
+ *         tb_entity_id:
  *           type: integer
- *         name_customer:
- *           type: string 
- *         tb_salesman_id:
- *           type: integer
- *         name_salesman:
- *           type: string 
- *         note:
- *           type: string 
- *         status:
+ *         name_entity:
  *           type: string
- *  
- *     OrderBonusList:
- *       type: object
- *       properties:
- *         id:
- *           type: integer
- *         tb_user_id:
- *           type: integer
- *         dt_record:
- *           type: string
- *         number:
- *           type: integer
- *         tb_customer_id:
- *           type: integer
- *         name_customer:
+ *         doc_entity:
  *           type: string 
- *         status:
+ *         tb_stock_list_id:
+ *           type: integer 
+ *         name_stock_list:
+ *           type: string
+ *         direction:
  *           type: string
  * 
- *     OrderBonusItem:
- *       type: object
- *       required:
- *         - tb_product_id
- *         - unit_value
- *         - quantity
- *       properties:
- *         tb_product_id:
- *           type: integer
- *         name_product:
- *           type: string
- *         unit_value:
- *           type: number
- *         quantity:
- *           type: number
  * 
- *
- *     OrderBonusMain:
+ *     objOrderBonus:
  *       type: object
  *       properties:
- *         Order:
- *           $ref: '#/components/schemas/OrderBonus'
- *         Items:
+ *         order:
+ *           $ref: '#/components/schemas/order'
+ *         bonus:
+ *           $ref: '#/components/schemas/orderBonus'
+ *         totalizer:
+ *           $ref: '#/components/schemas/orderTotalizer'
+ *         items:
  *            type: array
  *            items:
- *              $ref: '#/components/schemas/OrderBonusItem'
+ *              $ref: '#/components/schemas/orderItems'
+ *  
  */
  
  
- /**
-  * @swagger
-  * tags:
-  *   name: OrderBonus
-  *   description: The OrderBonus managing API
-  */
-
+ 
 /**
+* @swagger
+* tags:
+*   name: OrderBonus
+*   description: The OrderBonus managing API
+*/
+
+ /**
  * @swagger
- * /orderbonus:
+ * /orderbonus/sync:
  *   post:
- *     summary: Create a new orderbonus
+ *     summary: Sync a OrderBonus
  *     tags: [OrderBonus]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/OrderBonusMain'
+ *             $ref: '#/components/schemas/objOrderBonus'
+ *     responses:
+ *       200:
+ *         description: The objOrderBonus was successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/objOrderBonus'
+ *       500:
+ *         description: Some server error
+ */
+ router.post("/sync/", orderbonus.sync);
+
+/**
+ * @swagger
+ * /orderbonus:
+ *   post:
+ *     summary: Create a new OrderBonus
+ *     tags: [OrderBonus]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/objOrderBonus'
  *     responses:
  *       200:
  *         description: The OrderBonus was successfully created
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/OrderBonusMain'
+ *               $ref: '#/components/schemas/objOrderBonus'
  *       500:
  *         description: Some server error
  */
@@ -125,32 +111,30 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
 
  /**
  * @swagger
- * /orderbonus/getlist/{tb_institution_id}:
- *   get:
- *     summary: Returns the list of all the OrderBonuss
+ * /orderbonus/getlist/:
+ *   post:
+ *     summary: Returns the list of all the OrderBonus
  *     tags: [OrderBonus]
- *     parameters:
- *      - in: path
- *        name: tb_institution_id
- *        schema:
- *          type: string
- *        required: true
- *        description: The orderbonus tb_institution_id
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/orderParams'
  *     responses:
  *       200:
- *         description: The list of the Bonus
+ *         description: The list of the payment types
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/OrderBonusList'
+ *                 $ref: '#/components/schemas/orderBonus'
  */
-  //router.get("/getlist/:tb_institution_id", orderbonus.getList);
-  protectedRouter.get("/getlist/:tb_institution_id", orderbonus.getList);
+  protectedRouter.post("/getlist/", orderbonus.getList); 
+
 /**
  * @swagger
- * /orderbonus/get/{tb_institution_id}/{id}:
+ * /orderbonus/get/{tb_institution_id}/{tb_user_id}/{tb_order_id}:
  *   get:
  *     summary: Returns the OrderBonus
  *     tags: [OrderBonus]
@@ -158,40 +142,38 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *      - in: path
  *        name: tb_institution_id
  *      - in: path
- *        name: id
- *        schema:
- *          type: string
- *        required: true
- *        description: The Order Bonus by tb_institution_id and id
+ *        name: tb_user_id
+ *      - in: path
+ *        name: tb_order_id
  *     responses:
  *       200:
  *         description: The OrderBonus
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/OrderBonusMain'
+ *               $ref: '#/components/schemas/objOrderBonus'
  */
-  //router.get("/get/:tb_institution_id/:id", orderbonus.get);
-  protectedRouter.get("/get/:tb_institution_id/:id", orderbonus.get);
+  router.get("/get/:tb_institution_id/:tb_user_id/:tb_order_id", orderbonus.get);
+  
  /**
  * @swagger
  * /orderbonus:
  *  put:
- *    summary: Update the orderbonus by the id
+ *    summary: Update the OrderBonus by the id
  *    tags: [OrderBonus]
  *    requestBody:
  *      required: true
  *      content:
  *        application/json:
  *          schema:
- *            $ref: '#/components/schemas/OrderBonusMain'
+ *            $ref: '#/components/schemas/objOrderBonus'
  *    responses:
  *      200:
  *        description: The OrderBonus was updated
  *        content:
  *          application/json:
  *            schema:
- *              $ref: '#/components/schemas/OrderBonusMain'
+ *              $ref: '#/components/schemas/objOrderBonus'
  *      404:
  *        description: The orderbonus was not found
  *      500:
@@ -199,6 +181,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  */
   //router.put("/", orderbonus.update);
   protectedRouter.put("/", orderbonus.update);
+
 /**
  * @swagger
  * /orderbonus/{tb_institution_id}/{id}:
@@ -224,6 +207,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  */
   //router.delete("/:tb_institution_id/:id", orderbonus.delete);
   protectedRouter.delete("/:tb_institution_id/:id", orderbonus.delete);
+
 /**
  * @swagger
  * /orderbonus/closure:
@@ -245,7 +229,7 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
  *       201:
  *         description: The OrderBonus is already closed
  *       404:
- *         description: The Order Bonus was not found
+ *         description: The Order Transfer was notTransfer
  *       500:
  *         description: Some error happened
  */
@@ -272,10 +256,11 @@ const protectedRouter = withJWTAuthMiddleware(router, process.env.SECRET);
   *       201:
   *         description: The OrderBonus is already open
   *       404:
-  *         description: The Order Bonus was not found
+  *         description: The Order Transfer was notTransfer
   *       500:
   *         description: Some error happened
   */
   //router.post("/reopen/", orderbonus.reopen);     
   protectedRouter.post("/reopen/", orderbonus.reopen);     
+  
 module.exports = router;

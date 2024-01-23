@@ -185,9 +185,10 @@ class ProdcutController extends Base {
         '  on (prc.tb_product_id = prd.id)  ' +
         '  and (prc.tb_institution_id = prd.tb_institution_id)  ' +
         'where (prc.tb_institution_id =? )  ' +
-        'and ( prc.tb_product_id =? ) ',
+        'and ( prc.tb_product_id =? ) '+
+        'and ( prl.published =? ) ',
         {
-          replacements: [tb_institution_id, tb_product_id],
+          replacements: [tb_institution_id, tb_product_id,'S'],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           var dataResult = {};

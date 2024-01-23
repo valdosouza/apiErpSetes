@@ -29,10 +29,7 @@ const server = {
 
         // parse requests of content-type - application/x-www-form-urlencoded
         app.use(bodyParser.urlencoded({ extended: true }));
-        
-
-
-          
+                 
         app.use(cors({    
             origin: "*",
               methods: "GET,HEAD,PUT,PATCH,POST,DELETE",

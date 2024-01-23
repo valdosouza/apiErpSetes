@@ -1,4 +1,4 @@
-const Base = require('./base.controller.js')
+const Base = require('../controller/base.controller.js')
 const db = require("../model");
 const Tb = db.stockStatement;
 

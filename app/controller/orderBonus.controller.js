@@ -32,7 +32,7 @@ class OrderBonusController extends Base {
 
   static async insertOrder(body) {
     const promise = new Promise(async (resolve, reject) => {
-
+      
       if (body.order.number == 0)
         body.order.number = await this.getNextNumber(body.order.tb_institution_id);
 
