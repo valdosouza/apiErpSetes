@@ -312,12 +312,18 @@ class CustomerController extends Base {
         'et.name_company,  ' +
         'et.nick_trade, ' +
         ' "F" doc_kind, ' +
-        'pe.cpf doc_number ' +
+        'pe.cpf doc_number, ' +
+        'adr.street, ' +
+        'adr.nmbr, ' +
+        'adr.complement,'+
+        'adr.neighborhood         ' +
         'from tb_customer ct  ' +
         '  inner join tb_entity et  ' +
         '  on (ct.id = et.id)  ' +
         '  inner join tb_person pe ' +
         '  on (pe.id = et.id) ' +
+        '  inner join tb_address adr ' +
+        '  on (adr.id = ct.id) and (kind = "COMERCIAL") ' +
         'where ct.tb_institution_id =? ' +
         ' and (tb_salesman_id = ? ) ';
 
@@ -335,12 +341,19 @@ class CustomerController extends Base {
         'et.name_company,  ' +
         'et.nick_trade, ' +
         ' "J" doc_kind, ' +
-        'co.cnpj doc_number ' +
+        'co.cnpj doc_number, ' +
+        'adr.street, ' +
+        'adr.nmbr, ' +
+        'adr.complement,'+
+        'adr.neighborhood ' +
         'from tb_customer ct  ' +
         '  inner join tb_entity et  ' +
         '  on (ct.id = et.id)  ' +
         '  inner join tb_company co ' +
         '  on (co.id = et.id) ' +
+        '  inner join tb_address adr ' +
+        '  on (adr.id = ct.id) and (kind = "COMERCIAL") ' +
+      
         'where ct.tb_institution_id =? ' +
         ' and (tb_salesman_id = ? ) ';
       if (body.name_customer != "") {
