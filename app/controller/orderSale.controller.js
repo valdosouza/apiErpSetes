@@ -10,15 +10,15 @@ const entityHasStockListController = require('./entityHasStockList.controller.js
 const EntityExtenralCode = require('./entityExternalCode.controller.js');
 
 class OrderSaleController extends Base {
-  static async getNextNumber(tb_institution_id,tb_salesman_id) {
+  static async getNextNumber(tb_institution_id, tb_salesman_id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
         'Select max(number) lastNumber ' +
         'from tb_order_sale ' +
-        'WHERE ( tb_institution_id =? ) '+                
-        ' and ( tb_salesman_id =?)',        
+        'WHERE ( tb_institution_id =? ) ' +
+        ' and ( tb_salesman_id =?)',
         {
-          replacements: [tb_institution_id,tb_salesman_id],
+          replacements: [tb_institution_id, tb_salesman_id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
           var nextNumber = 1;
@@ -37,18 +37,18 @@ class OrderSaleController extends Base {
   static async sync(body) {
     const promise = new Promise(async (resolve, reject) => {
       try {
-        
-        var regSalesman = await EntityExtenralCode.getByExternalCode(body.sale.tb_institution_id,body.sale.salesman_external_code,'COLABORADOR');
-        body.sale.tb_salesman_id  = regSalesman.tb_entity_id;
+
+        var regSalesman = await EntityExtenralCode.getByExternalCode(body.sale.tb_institution_id, body.sale.salesman_external_code, 'COLABORADOR');
+        body.sale.tb_salesman_id = regSalesman.tb_entity_id;
         //Caso seja zer pegar o primeiro colaborador da lista do estabelemcimento
-        if (body.sale.tb_salesman_id == 0){
-          regSalesman = await EntityExtenralCode.getFirstExternalCode(body.sale.tb_institution_id,'COLABORADOR');
-          body.sale.tb_salesman_id  = regSalesman.tb_entity_id;  
+        if (body.sale.tb_salesman_id == 0) {
+          regSalesman = await EntityExtenralCode.getFirstExternalCode(body.sale.tb_institution_id, 'COLABORADOR');
+          body.sale.tb_salesman_id = regSalesman.tb_entity_id;
         }
-        
-        var regCustomer = await EntityExtenralCode.getByExternalCode(body.sale.tb_institution_id,body.sale.customer_external_code,'EMPRESA');
+
+        var regCustomer = await EntityExtenralCode.getByExternalCode(body.sale.tb_institution_id, body.sale.customer_external_code, 'EMPRESA');
         body.sale.tb_customer_id = regCustomer.tb_entity_id;
-        body.order.tb_user_id   = body.sale.tb_salesman_id
+        body.order.tb_user_id = body.sale.tb_salesman_id
         delete body.sale.customerExternalCode;
         delete body.sale.salesmanExternalCode;
         orderController.sync(body.order);
@@ -108,7 +108,7 @@ class OrderSaleController extends Base {
     const promise = new Promise(async (resolve, reject) => {
 
       if (body.sale.number == 0)
-        body.sale.number = await this.getNextNumber(body.order.tb_institution_id,body.sale.tb_salesman_id);
+        body.sale.number = await this.getNextNumber(body.order.tb_institution_id, body.sale.tb_salesman_id);
 
       const dataOrder = {
         id: body.order.id,
@@ -232,7 +232,7 @@ class OrderSaleController extends Base {
           '   inner join tb_person pslm ' +
           '   on (pslm.id  = slm.id)     ' +
           'where (ord.tb_institution_id =? )  ' +
-          '  and (ord.terminal = ?) '+
+          '  and (ord.terminal = ?) ' +
           'and (ors.tb_salesman_id = ?) ' +
           ' AND (ord.status <> ?) ';
 
@@ -271,7 +271,7 @@ class OrderSaleController extends Base {
           '   inner join tb_person pslm ' +
           '   on (pslm.id  = slm.id)     ' +
           'where (ord.tb_institution_id =? )  ' +
-          '  and (ord.terminal = ?) '+
+          '  and (ord.terminal = ?) ' +
           'and (ors.tb_salesman_id = ?) ' +
           ' AND (ord.status <> ?) ';
         if (body.nick_trade != "") {
@@ -280,14 +280,14 @@ class OrderSaleController extends Base {
           sqltxt += ' and (ctm.nick_trade <> ?) ';
         }
         sqltxt +=
-          ' order by number DESC '+
-          ' limit ' + ((body.page - 1) * 20) + ',20 ';   
- 
+          ' order by number DESC ' +
+          ' limit ' + ((body.page - 1) * 20) + ',20 ';
+
 
         Tb.sequelize.query(
           sqltxt,
           {
-            replacements: [body.tb_institution_id, 0, body.tb_salesman_id, 'D', nick_trade, body.tb_institution_id,0, body.tb_salesman_id, 'D', nick_trade],
+            replacements: [body.tb_institution_id, 0, body.tb_salesman_id, 'D', nick_trade, body.tb_institution_id, 0, body.tb_salesman_id, 'D', nick_trade],
             type: Tb.sequelize.QueryTypes.SELECT
           }).then(data => {
             resolve(data);
@@ -515,7 +515,7 @@ class OrderSaleController extends Base {
         var dataItem = {};
         var stock = await entityHasStockListController.getByEntity(body.order.tb_institution_id, body.sale.tb_salesman_id);
         for (var item of body.items) {
-          
+
           if (item.updateStatus != "") {
 
             dataItem = {
@@ -534,7 +534,7 @@ class OrderSaleController extends Base {
             };
             //Quanto o insert é mais complexo como getNext precisa do no loop              
             switch (item.update_status) {
-              case "I":                
+              case "I":
                 await orderItemController.insert(dataItem)
                   .then(data => {
                     item.id = data.id;
@@ -614,30 +614,40 @@ class OrderSaleController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var dataOrder = await this.getOrder(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
-        if ( (dataOrder.status == 'A') || (dataOrder.status == 'N') ) {
-          var items = await orderItemController.getList(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
-          var dataItem = {};
-          for (var item of items) {
-            dataItem = {
-              id: 0,
-              tb_institution_id: body.tb_institution_id,
-              tb_order_id: body._order_id,
-              terminal: 0,
-              tb_order_item_id: item.id,
-              tb_stock_list_id: item.tb_stock_list_id,
-              local: "web",
-              kind: "Fechamento",
-              dt_record: body.dt_record,
-              direction: "S",
-              tb_merchandise_id: item.tb_product_id,
-              quantity: item.quantity,
-              operation: "OrderSale"
-            };
-            //Quanto o insert é mais complexo como create precisa do no loop          
-            await stockStatement.insert(dataItem);
-          };
-          await orderController.updateStatus(body.tb_institution_id, body.tb_user_id, body.tb_order_id, 'F');
-          resolve("200");
+
+        if (dataOrder.status == 'A' || dataOrder.status == 'N') {
+          // Move a chamada para stockStatement.insert para segundo plano
+          Promise.resolve().then(async () => {
+            var items = await orderItemController.getList(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
+            var dataItem = {};
+
+            for (var item of items) {
+              dataItem = {
+                id: 0,
+                tb_institution_id: body.tb_institution_id,
+                tb_order_id: body._order_id,
+                terminal: 0,
+                tb_order_item_id: item.id,
+                tb_stock_list_id: item.tb_stock_list_id,
+                local: "web",
+                kind: "Fechamento",
+                dt_record: body.dt_record,
+                direction: "S",
+                tb_merchandise_id: item.tb_product_id,
+                quantity: item.quantity,
+                operation: "OrderSale",
+              };
+
+              await stockStatement.insert(dataItem);
+            }
+          });
+
+
+          // Inicia a função de atualização de status em segundo plano
+          Promise.resolve().then(async () => {
+            await orderController.updateStatus(body.tb_institution_id, body.tb_user_id, body.tb_order_id, 'F');
+            resolve("200");  // Responde ao usuário rapidamente
+          });
         } else {
           resolve("201");
         }
@@ -645,6 +655,7 @@ class OrderSaleController extends Base {
         reject(err);
       }
     });
+
     return promise;
   }
 
@@ -653,29 +664,36 @@ class OrderSaleController extends Base {
       try {
         var dataOrder = await this.getOrder(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
         if (dataOrder.status == 'F') {
-          var items = await orderItemController.getList(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
-          var dataItem = {};
-          for (var item of items) {
-            dataItem = {
-              id: 0,
-              tb_institution_id: body.tb_institution_id,
-              tb_order_id: body.tb_order_id,
-              terminal: 0,
-              tb_order_item_id: item.id,
-              tb_stock_list_id: item.tb_stock_list_id,
-              local: "web",
-              kind: "Reabertura",
-              dt_record: body.dt_record,
-              direction: "E",
-              tb_merchandise_id: item.tb_product_id,
-              quantity: item.quantity,
-              operation: "OrderSale"
+          // Move a chamada para stockStatement.insert para segundo plano
+          Promise.resolve().then(async () => {
+            var items = await orderItemController.getList(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
+            var dataItem = {};
+            for (var item of items) {
+              dataItem = {
+                id: 0,
+                tb_institution_id: body.tb_institution_id,
+                tb_order_id: body.tb_order_id,
+                terminal: 0,
+                tb_order_item_id: item.id,
+                tb_stock_list_id: item.tb_stock_list_id,
+                local: "web",
+                kind: "Reabertura",
+                dt_record: body.dt_record,
+                direction: "E",
+                tb_merchandise_id: item.tb_product_id,
+                quantity: item.quantity,
+                operation: "OrderSale"
+              };
+              //Quanto o insert é mais complexo como create precisa do no loop          
+              await stockStatement.insert(dataItem);
             };
-            //Quanto o insert é mais complexo como create precisa do no loop          
-            await stockStatement.insert(dataItem);
-          };
-          await orderController.updateStatus(body.tb_institution_id, body.tb_user_id, body.tb_order_id, 'A');
-          resolve("200");
+          });
+
+          // Inicia a função de atualização de status em segundo plano
+          Promise.resolve().then(async () => {
+            await orderController.updateStatus(body.tb_institution_id, body.tb_user_id, body.tb_order_id, 'A');
+            resolve("200");  // Responde ao usuário rapidamente
+          });
         } else {
           resolve("201");
         }
@@ -687,6 +705,7 @@ class OrderSaleController extends Base {
     });
     return promise;
   }
+
 
   static async saveCard(body) {
     const promise = new Promise(async (resolve, reject) => {

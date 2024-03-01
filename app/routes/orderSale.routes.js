@@ -160,30 +160,6 @@ router.put("/", ordersale.update);
 /**
  * @swagger
  * /ordersale:
- *   put:
- *     summary: Update a ordersale
- *     tags: [OrderSale]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/objOrderSale'
- *     responses:
- *       200:
- *         description: The OrderSale was successfully created
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/orderSale'
- *       500:
- *         description: Some server error
- */
-router.put("/", ordersale.update);
-
-/**
- * @swagger
- * /ordersale:
  *   delete:
  *     summary: Delete a ordersale
  *     tags: [OrderSale]
@@ -280,6 +256,7 @@ router.get("/get/:tb_institution_id/:tb_salesman_id/:tb_order_id/", ordersale.ge
  */
 
 protectedRouter.post("/closure/", ordersale.closure);
+
 /**
  * @swagger
  * /ordersale/reopen:

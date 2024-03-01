@@ -16,7 +16,22 @@ class StockStatementController extends Base {
     });
     return promise;
   }
+  static async insertSpread(...stockStatement) {
+    const promise = new Promise((resolve, reject) => {
+      try {
+        Tb.create(stockStatement)
+          .then((data) => {
+            resolve(data);
+          })
 
+      } catch (error) {
+        reject("Erro:" + error);
+      }
+
+
+    });
+    return promise;
+  }
   static getListByOrder(tb_institution_id, tb_order_id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
