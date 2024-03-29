@@ -374,7 +374,7 @@ class CustomerController extends Base {
           resolve(data);
         })
         .catch(err => {
-          reject('Customer: ' + err);
+          reject('CustomerController.getlist: ' + err);
         });
     });
     return promise;

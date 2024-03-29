@@ -464,7 +464,7 @@ class OrderBonusController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         var dataOrder = await this.getOrder(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
-        console.log(dataOrder);
+
         if (dataOrder.status == 'A') {
           var items = await orderItemController.getList(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
 

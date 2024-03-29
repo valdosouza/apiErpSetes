@@ -204,6 +204,7 @@ class OrderSaleController extends Base {
   static getList(body) {
     const promise = new Promise((resolve, reject) => {
       try {
+
         var nick_trade = "";
         var sqltxt =
           'select ' +
@@ -233,8 +234,14 @@ class OrderSaleController extends Base {
           '   on (pslm.id  = slm.id)     ' +
           'where (ord.tb_institution_id =? )  ' +
           '  and (ord.terminal = ?) ' +
-          'and (ors.tb_salesman_id = ?) ' +
-          ' AND (ord.status <> ?) ';
+          'and (ors.tb_salesman_id = ?) ';
+
+        if (body.status == "T") {
+          sqltxt += ' AND (ord.status <> ?) ';          
+        } else {
+          sqltxt += ' AND (ord.status = ?) ';
+        }
+
 
         if (body.nick_trade != "") {
           nick_trade = '%' + body.nick_trade + '%';
@@ -272,22 +279,31 @@ class OrderSaleController extends Base {
           '   on (pslm.id  = slm.id)     ' +
           'where (ord.tb_institution_id =? )  ' +
           '  and (ord.terminal = ?) ' +
-          'and (ors.tb_salesman_id = ?) ' +
-          ' AND (ord.status <> ?) ';
+          'and (ors.tb_salesman_id = ?) ';
+
+        if (body.status == "T") {
+          sqltxt += ' AND (ord.status <> ?) ';
+          body.status = "D" //altera de todos para Deletado
+        } else {
+          sqltxt += ' AND (ord.status = ?) ';
+        }
+
         if (body.nick_trade != "") {
           sqltxt += ' and (ctm.nick_trade like ? ) ';
         } else {
           sqltxt += ' and (ctm.nick_trade <> ?) ';
         }
+
+
+
         sqltxt +=
           ' order by number DESC ' +
           ' limit ' + ((body.page - 1) * 20) + ',20 ';
 
-
         Tb.sequelize.query(
           sqltxt,
           {
-            replacements: [body.tb_institution_id, 0, body.tb_salesman_id, 'D', nick_trade, body.tb_institution_id, 0, body.tb_salesman_id, 'D', nick_trade],
+            replacements: [body.tb_institution_id, 0, body.tb_salesman_id, body.status, nick_trade, body.tb_institution_id, 0, body.tb_salesman_id, body.status, nick_trade],
             type: Tb.sequelize.QueryTypes.SELECT
           }).then(data => {
             resolve(data);
