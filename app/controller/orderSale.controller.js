@@ -627,53 +627,55 @@ class OrderSaleController extends Base {
   }
 
   static async closure(body) {
-    const promise = new Promise(async (resolve, reject) => {
-      try {
-        var dataOrder = await this.getOrder(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
-
-        if (dataOrder.status == 'A' || dataOrder.status == 'N') {
-          // Move a chamada para stockStatement.insert para segundo plano
-          Promise.resolve().then(async () => {
-            var items = await orderItemController.getList(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
-            var dataItem = {};
-
-            for (var item of items) {
-              dataItem = {
-                id: 0,
-                tb_institution_id: body.tb_institution_id,
-                tb_order_id: body._order_id,
-                terminal: 0,
-                tb_order_item_id: item.id,
-                tb_stock_list_id: item.tb_stock_list_id,
-                local: "web",
-                kind: "Fechamento",
-                dt_record: body.dt_record,
-                direction: "S",
-                tb_merchandise_id: item.tb_product_id,
-                quantity: item.quantity,
-                operation: "OrderSale",
-              };
-
-              await stockStatement.insert(dataItem);
-            }
+    try {
+      const dataOrder = await this.getOrder(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
+  
+      if (dataOrder.status == 'A' || dataOrder.status == 'N') {
+        // Iniciar processos em segundo plano
+        const processos = [];
+  
+        // Processo para inserir itens em stockStatement
+        processos.push((async () => {
+          const items = await orderItemController.getList(body.tb_institution_id, body.tb_user_id, body.tb_order_id);
+          const promises = items.map(async (item) => {
+            const dataItem = {
+              id: 0,
+              tb_institution_id: body.tb_institution_id,
+              tb_order_id: body._order_id,
+              terminal: 0,
+              tb_order_item_id: item.id,
+              tb_stock_list_id: item.tb_stock_list_id,
+              local: "web",
+              kind: "Fechamento",
+              dt_record: body.dt_record,
+              direction: "S",
+              tb_merchandise_id: item.tb_product_id,
+              quantity: item.quantity,
+              operation: "OrderSale",
+            };
+            await stockStatement.insert(dataItem);
           });
-
-
-          // Inicia a função de atualização de status em segundo plano
-          Promise.resolve().then(async () => {
-            await orderController.updateStatus(body.tb_institution_id, body.tb_user_id, body.tb_order_id, 'F');
-            resolve("200");  // Responde ao usuário rapidamente
-          });
-        } else {
-          resolve("201");
-        }
-      } catch (err) {
-        reject(err);
+          await Promise.all(promises);
+        })());
+  
+        // Processo para atualizar status em orderController
+        processos.push((async () => {
+          await orderController.updateStatus(body.tb_institution_id, body.tb_user_id, body.tb_order_id, 'F');
+        })());
+  
+        // Esperar que todos os processos sejam concluídos em paralelo
+        await Promise.all(processos);
+  
+        return "200"; // Responde ao usuário após iniciar os processos em segundo plano
+      } else {
+        return "201";
       }
-    });
-
-    return promise;
+    } catch (err) {
+      
+      throw err;
+    }
   }
+  
 
   static async reopen(body) {
     const promise = new Promise(async (resolve, reject) => {

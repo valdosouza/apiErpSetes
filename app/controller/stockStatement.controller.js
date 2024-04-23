@@ -28,7 +28,6 @@ class StockStatementController extends Base {
         reject("Erro:" + error);
       }
 
-
     });
     return promise;
   }

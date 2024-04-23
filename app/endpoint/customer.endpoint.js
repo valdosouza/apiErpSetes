@@ -34,7 +34,6 @@ class CustomerEndPoint {
         docNumber = req.body.fiscal.company.cnpj;
         docKind = "J";
       }
-
       fiscalController.getByDocNumber(docNumber)
         .then(async dataDocnumber => {          
           var dataCustomer = {tb_salesman_id:0};

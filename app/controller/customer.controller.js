@@ -8,6 +8,7 @@ const companyControler = require('./company.controller.js');
 const personControler = require('./person.controller.js');
 const addressControler = require('./address.controller.js');
 const phoneControler = require('./phone.controller.js');
+const { stack } = require('sequelize/lib/utils');
 
 class CustomerController extends Base {
 
@@ -249,15 +250,19 @@ class CustomerController extends Base {
     const promise = new Promise(async (resolve, reject) => {
       try {
         body.fiscal.obj_entity.entity.id = body.customer.id
-        entityControler.update(body.fiscal.obj_entity.entity);
-
-        if (body.fiscal.person.id > 0) {
-          body.person.id = body.fiscal.customer.id
-          personControler.update(body.fiscal.person);
-        } else {
-          body.fiscal.company.id = body.customer.id
-          companyControler.update(body.fiscal.company);
+        entityControler.update(body.fiscal.obj_entity.entity);        
+        if (body.person) {
+          if (body.person.cpf.length == 11) {
+            body.person.id = body.fiscal.customer.id
+            personControler.update(body.fiscal.person);
+          }
         }
+        if (body.company) {
+          if (body.company.cnpj.length == 14) {
+            body.fiscal.company.id = body.customer.id
+            companyControler.update(body.fiscal.company);
+          }
+        }        
         for (var item of body.fiscal.obj_entity.address_list) {
           item.id = body.customer.id
           await addressControler.save(item);
@@ -275,6 +280,7 @@ class CustomerController extends Base {
             where: { id: body.customer.id }
           });
         }
+        
         resolve(body);
       } catch (err) {
         reject('Customer.update: ' + err);
@@ -315,7 +321,7 @@ class CustomerController extends Base {
         'pe.cpf doc_number, ' +
         'adr.street, ' +
         'adr.nmbr, ' +
-        'adr.complement,'+
+        'adr.complement,' +
         'adr.neighborhood         ' +
         'from tb_customer ct  ' +
         '  inner join tb_entity et  ' +
@@ -344,7 +350,7 @@ class CustomerController extends Base {
         'co.cnpj doc_number, ' +
         'adr.street, ' +
         'adr.nmbr, ' +
-        'adr.complement,'+
+        'adr.complement,' +
         'adr.neighborhood ' +
         'from tb_customer ct  ' +
         '  inner join tb_entity et  ' +
@@ -353,7 +359,7 @@ class CustomerController extends Base {
         '  on (co.id = et.id) ' +
         '  inner join tb_address adr ' +
         '  on (adr.id = ct.id) and (kind = "COMERCIAL") ' +
-      
+
         'where ct.tb_institution_id =? ' +
         ' and (tb_salesman_id = ? ) ';
       if (body.name_customer != "") {

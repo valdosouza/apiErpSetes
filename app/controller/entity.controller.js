@@ -139,17 +139,19 @@ class EntityController extends Base {
 
   static async update(entity) {
     const promise = new Promise((resolve, reject) => {
-      delete entity.name_linebusiness;
-      if (entity.aniversary == '') delete entity.aniversary;
-      Tb.update(entity, {
-        where: { id: entity.id }
-      })
-        .then(data => {
-          resolve(data);
+      try {
+        delete entity.name_linebusiness;
+       
+        if (entity.aniversary == '') delete entity.aniversary;
+        Tb.update(entity, {
+          where: { id: entity.id }
         })
-        .catch(err => {
-          reject("Erro:" + err);
-        });
+          .then(data => {
+            resolve(data);
+          })        
+      } catch (error) {
+        reject("entityController.update:" + error);
+      }
     });
     return promise;
   }
