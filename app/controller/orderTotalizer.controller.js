@@ -62,18 +62,18 @@ class OrderTotalizerController extends Base {
         var totalizer = body.totalizer;
         totalizer.tb_institution_id = body.order.tb_institution_id;
         totalizer.id = body.order.id;
-        totalizer.terminal = body.order.terminal;        
-        
+        totalizer.terminal = body.order.terminal;
+
         Tb.create(totalizer)
-        .then(()=>{
-          resolve(totalizer);
-        });              
+          .then(() => {
+            resolve(totalizer);
+          });
       } catch (error) {
         reject("OrderTotalizerController.insert:" + error);
       }
     });
     return promise;
-  }  
+  }
 
   static async update(body) {
     const promise = new Promise(async (resolve, reject) => {
@@ -81,8 +81,8 @@ class OrderTotalizerController extends Base {
         var totalizer = body.totalizer;
         totalizer.tb_institution_id = body.order.tb_institution_id;
         totalizer.id = body.order.id;
-        totalizer.terminal = body.order.terminal;        
-        
+        totalizer.terminal = body.order.terminal;
+
         Tb.update(totalizer, {
           where: {
             id: totalizer.id,
@@ -92,59 +92,69 @@ class OrderTotalizerController extends Base {
         })
           .then(data => {
             resolve(data);
-          })             
+          })
       } catch (error) {
         reject("OrderTotalizerController.insert:" + error);
       }
     });
     return promise;
-  }  
+  }
 
-  static get(tb_institution_id,tb_salesman_id, id) {
+  static get(tb_institution_id, tb_salesman_id, id) {
     const promise = new Promise((resolve, reject) => {
       Tb.sequelize.query(
-        'Select '+
-        'ort.items_qtde, '+
-        'ort.product_qtde, '+
-        'ort.product_value, '+
-        'ort.ipi_value, '+
-        'ort.discount_aliquot, '+
-        'ort.discount_value, '+
-        'ort.expenses_value, '+
-        'ort.total_value '+
-        'From tb_order_totalizer ort '+
-        '  inner join tb_order ord '+
-        '  on (ord.id = ort.id) '+
-        '    and (ord.tb_institution_id = ort.tb_institution_id) '+
-        '    and (ord.terminal = ort.terminal) '+          
-        'where (ord.tb_institution_id =? )'+
-        ' and (ord.tb_user_id = ?) '+
+        'Select ' +
+        'ort.items_qtde, ' +
+        'ort.product_qtde, ' +
+        'ort.product_value, ' +
+        'ort.ipi_value, ' +
+        'ort.discount_aliquot, ' +
+        'ort.discount_value, ' +
+        'ort.expenses_value, ' +
+        'ort.total_value ' +
+        'From tb_order_totalizer ort ' +
+        '  inner join tb_order ord ' +
+        '  on (ord.id = ort.id) ' +
+        '    and (ord.tb_institution_id = ort.tb_institution_id) ' +
+        '    and (ord.terminal = ort.terminal) ' +
+        'where (ord.tb_institution_id =? )' +
+        ' and (ord.tb_user_id = ?) ' +
         ' and (ord.id = ?)',
         {
-          replacements: [tb_institution_id,tb_salesman_id, id],
+          replacements: [tb_institution_id, tb_salesman_id, id],
           type: Tb.sequelize.QueryTypes.SELECT
         }).then(data => {
-          if (data.length > 0){
+          if (data.length > 0) {
             resolve({
-              items_qtde : Number(data[0].items_qtde),
-              product_qtde : Number(data[0].product_qtde),
-              product_value : Number(data[0].product_value),
-              ipi_value : Number(data[0].ipi_value),
-              discount_aliquot : Number(data[0].discount_aliquot),
-              discount_value : Number(data[0].discount_value),
-              expenses_value : Number(data[0].expenses_value),
-              total_value : Number(data[0].total_value),
+              items_qtde: Number(data[0].items_qtde),
+              product_qtde: Number(data[0].product_qtde),
+              product_value: Number(data[0].product_value),
+              ipi_value: Number(data[0].ipi_value),
+              discount_aliquot: Number(data[0].discount_aliquot),
+              discount_value: Number(data[0].discount_value),
+              expenses_value: Number(data[0].expenses_value),
+              total_value: Number(data[0].total_value),
             });
-          }else{
-            resolve("{}");
+          } else {
+            resolve({
+              items_qtde: 0.0,
+              product_qtde: 0.0,
+              product_value: 0.0,
+              ipi_value: 0.0,
+              discount_aliquot: 0.0,
+              discount_value: 0.0,
+              expenses_value: 0.0,
+              total_value: 0.0,
+            });
+
           }
-          
+
         })
         .catch(err => {
           reject('orderTotalizer.get: ' + err);
         });
     });
     return promise;
-  }  
+  }
 }
 module.exports = OrderTotalizerController;
